@@ -67,13 +67,34 @@ export default function HomeScreen() {
     await Linking.openURL(url);
   };
   
+  const quickExit = async () => {
+    const safeUrl = "https://www.weather.com";
+  
+    const canOpen = await Linking.canOpenURL(safeUrl);
+    if (!canOpen) return;
+  
+    await Linking.openURL(safeUrl);
+  };
+  
 
   const offlineFallback = () => {
     Alert.alert(
       "Offline / No Data",
-      "We can’t load nearby resources right now. If it’s safe, contact the National DV Hotline."
+      `We can’t load nearby resources right now.
+  
+  If it’s safe to do so, you can contact the National Domestic Violence Hotline:
+  
+  📞 Call: 1-800-799-7233
+  📱 Text: START to 88788
+  
+  If you are in immediate danger, call 911.
+  
+  They are available 24/7 and can help you find local support.`,
+      [{ text: "OK" }]
     );
   };
+  
+  
 
   const Pill = ({ label }: { label: string }) => (
     <View style={{ paddingVertical: 6, paddingHorizontal: 10, borderRadius: 999, borderWidth: 1 }}>
@@ -84,8 +105,21 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={{ flex: 1, padding: 16, justifyContent: "center" }}>
       <View style={{ gap: 12 }}>
+        
+        <TouchableOpacity
+          onPress={quickExit}
+          style={{
+            alignSelf: "flex-end",
+            paddingVertical: 6,
+            paddingHorizontal: 10,
+            borderRadius: 999,
+            borderWidth: 1,
+          }}
+        >
+          <Text style={{ fontWeight: "600" }}>Quick Exit</Text>
+        </TouchableOpacity>
+  
         <Text style={{ fontSize: 28, fontWeight: "700" }}>Local Help</Text>
-
         <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
           <Pill label={`Status: ${status}`} />
           {coords && <Pill label={`Lat: ${coords.latitude.toFixed(4)}`} />}
