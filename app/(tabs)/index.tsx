@@ -7,6 +7,14 @@ export default function HomeScreen() {
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>("");
 
+  const mockShelter = {
+    name: "Hope Haven Shelter",
+    address: "Charleston, SC",
+    distance: "2.3 miles away",
+    coords: { latitude: 32.7765, longitude: -79.9311 },
+  };
+  
+
   const sampleShelterCoords = useMemo(() => {
     // Test destination (Charleston, SC)
     return { latitude: 32.7765, longitude: -79.9311 };
@@ -40,24 +48,25 @@ export default function HomeScreen() {
     }
   };
 
-  const openMapsToDestination = async () => {
-    const { latitude, longitude } = sampleShelterCoords;
-
+  const openMapsToDestination = async (destination: { latitude: number; longitude: number }) => {
+    const { latitude, longitude } = destination;
+  
     const url =
       Platform.OS === "ios"
         ? `http://maps.apple.com/?daddr=${latitude},${longitude}`
         : Platform.OS === "android"
         ? `geo:0,0?q=${latitude},${longitude}(Destination)`
         : `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
-
+  
     const canOpen = await Linking.canOpenURL(url);
     if (!canOpen) {
       Alert.alert("Unable to open maps", "No maps app available on this device.");
       return;
     }
-
+  
     await Linking.openURL(url);
   };
+  
 
   const offlineFallback = () => {
     Alert.alert(
@@ -93,13 +102,32 @@ export default function HomeScreen() {
           <Text style={{ marginTop: 6 }}>Your location is only used to find nearby help.</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={openMapsToDestination}
-          style={{ padding: 16, borderRadius: 12, borderWidth: 1, alignItems: "center" }}
-        >
-          <Text style={{ fontSize: 18, fontWeight: "600" }}>Start Directions</Text>
-          <Text style={{ marginTop: 6 }}>Opens your default maps app.</Text>
-        </TouchableOpacity>
+        {status === "granted" && (
+  <View style={{ borderWidth: 1, borderRadius: 12, padding: 14, gap: 8 }}>
+    <Text style={{ fontSize: 18, fontWeight: "700" }}>Shelter Found</Text>
+
+    <Text style={{ fontSize: 16, fontWeight: "600" }}>{mockShelter.name}</Text>
+    <Text>{mockShelter.distance}</Text>
+    <Text>{mockShelter.address}</Text>
+
+    <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
+      <TouchableOpacity
+        onPress={() => openMapsToDestination(mockShelter.coords)}
+        style={{ flex: 1, padding: 12, borderRadius: 10, borderWidth: 1, alignItems: "center" }}
+      >
+        <Text style={{ fontWeight: "600" }}>Start Directions</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => Alert.alert("Other Shelters", "List view coming next.")}
+        style={{ flex: 1, padding: 12, borderRadius: 10, borderWidth: 1, alignItems: "center" }}
+      >
+        <Text style={{ fontWeight: "600" }}>Other Shelters</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+)}
+
 
         <TouchableOpacity
           onPress={offlineFallback}
