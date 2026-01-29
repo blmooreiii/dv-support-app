@@ -7,6 +7,9 @@ export default function HomeScreen() {
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>("");
 
+  const DEBUG = false;
+
+
   const mockShelter = {
     name: "Hope Haven Shelter",
     address: "Charleston, SC",
@@ -103,73 +106,126 @@ export default function HomeScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, padding: 16, justifyContent: "center" }}>
-      <View style={{ gap: 12 }}>
-        
+    <SafeAreaView style={{ flex: 1, padding: 16 }}>
+      {/* Top-right Quick Exit row */}
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "flex-end",
+          marginBottom: 16,
+          paddingHorizontal: 16 
+        }}
+      >
         <TouchableOpacity
           onPress={quickExit}
           style={{
-            alignSelf: "flex-end",
             paddingVertical: 6,
-            paddingHorizontal: 10,
+            paddingHorizontal: 14,
             borderRadius: 999,
-            borderWidth: 1,
+            borderWidth: 1.5,
+            borderColor: "#C62828",
           }}
         >
-          <Text style={{ fontWeight: "600" }}>Quick Exit</Text>
+          <Text style={{ fontWeight: "600", color: "#C62828" }}>Quick Exit</Text>
         </TouchableOpacity>
+      </View>
+      <View style={{ flex: 0.15 }} />
+      {/* STEP 3: Main content wrapper */}
+      <View style={{ gap: 12, paddingHorizontal: 16 }}>
+        <Text style={{ fontSize: 28, fontWeight: "700" }}>You’re not alone.</Text>
   
-        <Text style={{ fontSize: 28, fontWeight: "700" }}>Local Help</Text>
+        <Text style={{ fontSize: 16, lineHeight: 22 }}>
+          If it’s safe, we can help you find nearby support fast.
+        </Text>
+  
+        {/* Debug pills (optional: wrap in DEBUG later) */}
         <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
           <Pill label={`Status: ${status}`} />
           {coords && <Pill label={`Lat: ${coords.latitude.toFixed(4)}`} />}
           {coords && <Pill label={`Lng: ${coords.longitude.toFixed(4)}`} />}
         </View>
-
+  
         {errorMsg ? <Text style={{ color: "crimson" }}>{errorMsg}</Text> : null}
-
+  
+        {/* Primary CTA */}
         <TouchableOpacity
           onPress={requestLocation}
-          style={{ padding: 16, borderRadius: 12, borderWidth: 1, alignItems: "center" }}
+          style={{
+            paddingVertical: 18,
+            paddingHorizontal: 16,
+            borderRadius: 16,
+            backgroundColor: "#000",
+            alignItems: "center",
+            
+          }}
         >
-          <Text style={{ fontSize: 18, fontWeight: "600" }}>Use Location</Text>
-          <Text style={{ marginTop: 6 }}>Your location is only used to find nearby help.</Text>
+          <Text style={{ fontSize: 18, fontWeight: "700", color: "#fff" }}>
+            Get Help
+          </Text>
+          <Text style={{ marginTop: 6, color: "#e5e5e5", textAlign: "center" }}>
+            We use your location only to find nearby help — and we don’t store it.
+          </Text>
         </TouchableOpacity>
-
+  
+        {/* Shelter card */}
         {status === "granted" && (
-  <View style={{ borderWidth: 1, borderRadius: 12, padding: 14, gap: 8 }}>
-    <Text style={{ fontSize: 18, fontWeight: "700" }}>Shelter Found</Text>
+          <View style={{ borderWidth: 1, borderRadius: 12, padding: 14, gap: 8 }}>
+            <Text style={{ fontSize: 18, fontWeight: "700" }}>Shelter Found</Text>
+  
+            <Text style={{ fontSize: 16, fontWeight: "600" }}>{mockShelter.name}</Text>
+            <Text>{mockShelter.distance}</Text>
+            <Text>{mockShelter.address}</Text>
+  
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
+              <TouchableOpacity
+                onPress={() => openMapsToDestination(mockShelter.coords)}
+                style={{
+                  flex: 1,
+                  padding: 12,
+                  backgroundColor: "#F7F7F7",
+                  borderColor: "#D9D9D9",
 
-    <Text style={{ fontSize: 16, fontWeight: "600" }}>{mockShelter.name}</Text>
-    <Text>{mockShelter.distance}</Text>
-    <Text>{mockShelter.address}</Text>
-
-    <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
-      <TouchableOpacity
-        onPress={() => openMapsToDestination(mockShelter.coords)}
-        style={{ flex: 1, padding: 12, borderRadius: 10, borderWidth: 1, alignItems: "center" }}
-      >
-        <Text style={{ fontWeight: "600" }}>Start Directions</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => Alert.alert("Other Shelters", "List view coming next.")}
-        style={{ flex: 1, padding: 12, borderRadius: 10, borderWidth: 1, alignItems: "center" }}
-      >
-        <Text style={{ fontWeight: "600" }}>Other Shelters</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-)}
-
-
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ fontWeight: "600" }}>Start Directions</Text>
+              </TouchableOpacity>
+  
+              <TouchableOpacity
+                onPress={() => Alert.alert("Other Shelters", "List view coming next.")}
+                style={{
+                  flex: 1,
+                  padding: 12,
+                  borderColor: "#CFCFCF",
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ fontWeight: "600" }}>Other Shelters</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+  
+        {/* Secondary action */}
         <TouchableOpacity
           onPress={offlineFallback}
-          style={{ padding: 16, borderRadius: 12, borderWidth: 1, alignItems: "center" }}
+          style={{
+            paddingVertical: 14,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: "#ccc",
+            alignItems: "center",
+            
+          }}
         >
-          <Text style={{ fontSize: 18, fontWeight: "600" }}>Offline / No Data </Text>
+          <Text style={{ fontSize: 16, fontWeight: "500" }}>Resources & Hotlines</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
+  
 }
