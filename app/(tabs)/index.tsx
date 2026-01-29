@@ -51,6 +51,13 @@ export default function HomeScreen() {
     }
   };
 
+  const resetHome = () => {
+    setStatus("idle");
+    setCoords(null);
+    setErrorMsg("");
+  };
+  
+
   const openMapsToDestination = async (destination: { latitude: number; longitude: number }) => {
     const { latitude, longitude } = destination;
   
@@ -170,7 +177,14 @@ export default function HomeScreen() {
         {/* Shelter card */}
         {status === "granted" && (
           <View style={{ borderWidth: 1, borderRadius: 12, padding: 14, gap: 8 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <Text style={{ fontSize: 18, fontWeight: "700" }}>Shelter Found</Text>
+
+            <TouchableOpacity onPress={resetHome} style={{ paddingVertical: 6, paddingHorizontal: 10 }}>
+              <Text style={{ fontWeight: "600" }}>Start Over</Text>
+            </TouchableOpacity>
+          </View>
+
   
             <Text style={{ fontSize: 16, fontWeight: "600" }}>{mockShelter.name}</Text>
             <Text>{mockShelter.distance}</Text>
