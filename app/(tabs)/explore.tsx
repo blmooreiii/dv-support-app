@@ -1,112 +1,140 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from "react";
+import { AppState, Linking, SafeAreaView, Text, TouchableOpacity, View, Alert } from "react-native";
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+type Item = {
+  title: string;
+  subtitle?: string;
+  action: () => void;
+};
 
-export default function TabTwoScreen() {
+export default function ExploreScreen() {
+  const [privacyCover, setPrivacyCover] = useState(false);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "inactive" || state === "background") setPrivacyCover(true);
+      if (state === "active") setTimeout(() => setPrivacyCover(false), 150);
+    });
+    return () => sub.remove();
+  }, []);
+
+  const quickExit = async () => {
+    setPrivacyCover(true);
+
+    const safeUrl = "https://www.weather.com";
+    setTimeout(async () => {
+      try {
+        await Linking.openURL(safeUrl);
+      } catch {}
+    }, 120);
+  };
+
+  const open = async (url: string) => {
+    try {
+      const can = await Linking.canOpenURL(url);
+      if (!can) return Alert.alert("Unable to open", "No browser available.");
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert("Unable to open", "Please try again.");
+    }
+  };
+
+  const items: Item[] = [
+    {
+      title: "Hotlines (24/7)",
+      subtitle: "Call / text options",
+      action: () =>
+        Alert.alert(
+          "Direct Support",
+          "National Domestic Violence Hotline:\n\n📞 1-800-799-7233\n📱 Text START to 88788\n\nIf you are in immediate danger, call 911.",
+          [{ text: "OK" }]
+        ),
+    },
+    {
+      title: "Safety Planning",
+      subtitle: "Steps you can take to prepare",
+      action: () => open("https://www.thehotline.org/plan-for-safety/"),
+    },
+    {
+      title: "Tech Safety",
+      subtitle: "Phone, location, privacy tips",
+      action: () => open("https://www.thehotline.org/resources/digital-services/"),
+    },
+    {
+      title: "Legal Help",
+      subtitle: "Protection orders & rights",
+      action: () => open("https://www.womenslaw.org/"),
+    },
+    {
+      title: "Find Local Programs",
+      subtitle: "Search by area",
+      action: () => open("https://www.thehotline.org/get-help/domestic-violence-local-resources/"),
+    },
+  ];
+
+  const Card = ({ item }: { item: Item }) => (
+    <TouchableOpacity
+      onPress={item.action}
+      style={{
+        borderWidth: 1,
+        borderColor: "#ddd",
+        borderRadius: 14,
+        padding: 14,
+        backgroundColor: "#fff",
+      }}
+    >
+      <Text style={{ fontSize: 16, fontWeight: "700" }}>{item.title}</Text>
+      {!!item.subtitle && <Text style={{ marginTop: 6, color: "#666" }}>{item.subtitle}</Text>}
+    </TouchableOpacity>
+  );
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+      <View style={{ padding: 16 }}>
+        {/* Top-right Quick Exit */}
+        <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
+          <TouchableOpacity
+            onPress={quickExit}
+            style={{ paddingVertical: 6, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1.5, borderColor: "#C62828" }}
+          >
+            <Text style={{ fontWeight: "600", color: "#C62828" }}>Quick Exit</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={{ marginTop: 20, gap: 10 }}>
+          <Text style={{ fontSize: 24, fontWeight: "800" }}>Explore</Text>
+          <Text style={{ color: "#444" }}>
+            Browse resources when it’s safe. Use Quick Exit anytime.
+          </Text>
+
+          <View style={{ marginTop: 10, gap: 10 }}>
+            {items.map((item) => (
+              <Card key={item.title} item={item} />
+            ))}
+          </View>
+        </View>
+      </View>
+
+      {/* Privacy cover overlay */}
+      {privacyCover && (
+        <View
           style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "#fff",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 24,
+            zIndex: 9999,
+            elevation: 9999,
+          }}
+        >
+          <Text style={{ fontSize: 18, fontWeight: "700" }}>Loading…</Text>
+        </View>
+      )}
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-});

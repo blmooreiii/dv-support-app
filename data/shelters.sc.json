@@ -1,0 +1,61 @@
+[
+    [
+        {
+          "id": "sc-001",
+          "name": "My Sister’s House",
+          "city": "Charleston",
+          "state": "SC",
+          "address": "1820 Reynolds Ave, North Charleston, SC 29405",
+          "latitude": 32.8797,
+          "longitude": -79.9903,
+          "verified": true,
+          "source": "https://www.mysistershouse.org"
+        },
+        {
+          "id": "sc-002",
+          "name": "Sistercare",
+          "city": "Columbia",
+          "state": "SC",
+          "address": "P.O. Box 1029, Columbia, SC 29202",
+          "latitude": 34.0007,
+          "longitude": -81.0348,
+          "verified": true,
+          "source": "https://www.sistercare.org"
+        }
+      ],
+      
+    {
+      "id": "sc-greenville-01",
+      "name": "New Beginnings (Sample)",
+      "city": "Greenville",
+      "state": "SC",
+      "address": "Greenville, SC",
+      "latitude": 34.8526,
+      "longitude": -82.3940,
+      "verified": true,
+      "source": "static-seed"
+    },
+    {
+      "id": "sc-myrtlebeach-01",
+      "name": "Coastal Support (Sample)",
+      "city": "Myrtle Beach",
+      "state": "SC",
+      "address": "Myrtle Beach, SC",
+      "latitude": 33.6891,
+      "longitude": -78.8867,
+      "verified": true,
+      "source": "static-seed"
+    },
+    {
+      "id": "sc-rockhill-01",
+      "name": "Palmetto Aid (Sample)",
+      "city": "Rock Hill",
+      "state": "SC",
+      "address": "Rock Hill, SC",
+      "latitude": 34.9249,
+      "longitude": -81.0251,
+      "verified": true,
+      "source": "static-seed"
+    }
+  ]
+  
