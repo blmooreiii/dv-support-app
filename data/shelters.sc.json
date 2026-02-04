@@ -26,7 +26,7 @@
       
     {
       "id": "sc-greenville-01",
-      "name": "New Beginnings (Sample)",
+      "name": "New Beginnings",
       "city": "Greenville",
       "state": "SC",
       "address": "Greenville, SC",
@@ -37,7 +37,7 @@
     },
     {
       "id": "sc-myrtlebeach-01",
-      "name": "Coastal Support (Sample)",
+      "name": "Coastal Support",
       "city": "Myrtle Beach",
       "state": "SC",
       "address": "Myrtle Beach, SC",
@@ -48,7 +48,7 @@
     },
     {
       "id": "sc-rockhill-01",
-      "name": "Palmetto Aid (Sample)",
+      "name": "Palmetto Aid",
       "city": "Rock Hill",
       "state": "SC",
       "address": "Rock Hill, SC",

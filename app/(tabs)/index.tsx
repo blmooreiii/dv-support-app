@@ -1,7 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Alert, Linking, Platform, SafeAreaView, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import * as Location from "expo-location";
 import sheltersData from "../../data/shelters.sc.json";
+import { useRouter } from "expo-router";
+import { AppState } from "react-native";
+
+
+
+
 
 export default function HomeScreen() {
   type Shelter = {
@@ -16,6 +22,9 @@ export default function HomeScreen() {
     source: string;
   };
 
+  const router = useRouter();
+
+
   // Flattening the data immediately to prevent nested array issues
   const shelters: Shelter[] = (sheltersData as any).flat();
 
@@ -24,6 +33,15 @@ export default function HomeScreen() {
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [selectedShelter, setSelectedShelter] = useState<(Shelter & { distanceMiles: number }) | null>(null);
   const [privacyCover, setPrivacyCover] = useState(false);
+
+  useEffect(() => {
+  const sub = AppState.addEventListener("change", (state) => {
+    if (state === "inactive" || state === "background") setPrivacyCover(true);
+    if (state === "active") setTimeout(() => setPrivacyCover(false), 150);
+  });
+
+  return () => sub.remove();
+}, []);
 
 
   const DEBUG = false;
@@ -178,7 +196,7 @@ export default function HomeScreen() {
 
         <View style={{ marginTop: 40, gap: 12 }}>
           <Text style={{ fontSize: 28, fontWeight: "700" }}>You’re not alone.</Text>
-          <Text style={{ fontSize: 16 }}>If it’s safe, we can help you find nearby support fast.</Text>
+          <Text style={{ fontSize: 16 }}>We can help you find nearby support fast.</Text>
 
           {status === "requesting" ? (
             <View style={{ padding: 40, alignItems: 'center' }}>
@@ -190,7 +208,7 @@ export default function HomeScreen() {
               onPress={requestLocation}
               style={{ padding: 20, borderRadius: 16, backgroundColor: "#000", alignItems: "center" }}
             >
-              <Text style={{ fontSize: 18, fontWeight: "700", color: "#fff" }}>Get Help</Text>
+              <Text style={{ fontSize: 18, fontWeight: "700", color: "#fff" }}>Find Help</Text>
               <Text style={{ marginTop: 6, color: "#ccc", textAlign: "center" }}>We use your location only to find nearby help.</Text>
             </TouchableOpacity>
           )}
@@ -203,7 +221,36 @@ export default function HomeScreen() {
                 <Text style={{ fontSize: 18, fontWeight: "700" }}>Shelter Found</Text>
                 <TouchableOpacity onPress={resetHome}><Text style={{ fontWeight: "600" }}>Start Over</Text></TouchableOpacity>
               </View>
-              <Text style={{ fontSize: 16, fontWeight: "600", marginTop: 8 }}>{selectedShelter.name}</Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginTop: 8,
+                }}
+              >
+                <Text style={{ fontSize: 16, fontWeight: "600", flex: 1, paddingRight: 10 }}>
+                  {selectedShelter.name}
+                </Text>
+
+                {selectedShelter.verified && (
+                  <View
+                    style={{
+                      paddingVertical: 4,
+                      paddingHorizontal: 10,
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: "#1D9BF0",
+                      backgroundColor: "#E8F3FF",
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, fontWeight: "700", color: "#1D9BF0" }}>
+                      Verified
+                    </Text>
+                  </View>
+                )}
+              </View>
+
               <Text style={{ color: '#666' }}>{selectedShelter.distanceMiles.toFixed(1)} miles away</Text>
               
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
@@ -213,7 +260,24 @@ export default function HomeScreen() {
                 >
                   <Text style={{ fontWeight: "600" }}>Start Directions</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    router.push({
+                      pathname: "/shelters",
+                      params: {
+                        lat: coords?.latitude?.toString() ?? "",
+                        lon: coords?.longitude?.toString() ?? "",
+                      },
+                    });
+                  }}
+                  style={{ flex: 1, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: "#ddd", alignItems: "center" }}
+                >
+                  <Text style={{ fontWeight: "600" }}>Other Shelters</Text>
+                </TouchableOpacity>
               </View>
+
+              
             </View>
           )}
 

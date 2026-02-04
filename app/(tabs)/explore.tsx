@@ -19,15 +19,18 @@ export default function ExploreScreen() {
   }, []);
 
   const quickExit = async () => {
-    setPrivacyCover(true);
+  setPrivacyCover(true);
 
-    const safeUrl = "https://www.weather.com";
-    setTimeout(async () => {
-      try {
-        await Linking.openURL(safeUrl);
-      } catch {}
-    }, 120);
-  };
+  // optional: if you add more state later, reset it here
+
+  const safeUrl = "https://www.weather.com";
+  setTimeout(async () => {
+    try {
+      await Linking.openURL(safeUrl);
+    } catch {}
+  }, 120);
+};
+
 
   const open = async (url: string) => {
     try {
@@ -102,17 +105,31 @@ export default function ExploreScreen() {
         </View>
 
         <View style={{ marginTop: 20, gap: 10 }}>
-          <Text style={{ fontSize: 24, fontWeight: "800" }}>Explore</Text>
+          <Text style={{ fontSize: 24, fontWeight: "800" }}>Support</Text>
           <Text style={{ color: "#444" }}>
             Browse resources when it’s safe. Use Quick Exit anytime.
           </Text>
 
-          <View style={{ marginTop: 10, gap: 10 }}>
-            {items.map((item) => (
-              <Card key={item.title} item={item} />
-            ))}
-          </View>
+          
         </View>
+        <View style={{ marginTop: 10, gap: 10 }}>
+          {items.map((item) => (
+            <Card key={item.title} item={item} />
+          ))}
+        </View>
+
+        {/* #5: Trust / sources line */}
+        <Text
+          style={{
+            marginTop: 20,
+            fontSize: 12,
+            color: "#777",
+            textAlign: "center",
+          }}
+        >
+          Sources: TheHotline.org • WomensLaw.org
+        </Text>
+
       </View>
 
       {/* Privacy cover overlay */}
