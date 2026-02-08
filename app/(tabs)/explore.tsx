@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { AppState, Linking, SafeAreaView, Text, TouchableOpacity, View, Alert } from "react-native";
+import { AppState, Alert, Linking, SafeAreaView, Text, TouchableOpacity, View } from "react-native";
+
 
 type Item = {
   title: string;
@@ -18,6 +19,7 @@ export default function ExploreScreen() {
     return () => sub.remove();
   }, []);
 
+  // Opens a neutral, high-traffic site to safely exit the app
   const quickExit = async () => {
   setPrivacyCover(true);
 
@@ -59,9 +61,9 @@ export default function ExploreScreen() {
       action: () => open("https://www.thehotline.org/plan-for-safety/"),
     },
     {
-      title: "Tech Safety",
+      title: "Tech Safety & Privacy",
       subtitle: "Phone, location, privacy tips",
-      action: () => open("https://www.thehotline.org/resources/digital-services/"),
+      action: () => open("https://www.techsafety.org/resources-survivors"),
     },
     {
       title: "Legal Help",
@@ -87,7 +89,7 @@ export default function ExploreScreen() {
       }}
     >
       <Text style={{ fontSize: 16, fontWeight: "700" }}>{item.title}</Text>
-      {!!item.subtitle && <Text style={{ marginTop: 6, color: "#666" }}>{item.subtitle}</Text>}
+      {!!item.subtitle && <Text style={{ marginTop: 6, color: "#555 lineHeight:20," }}>{item.subtitle}</Text>}
     </TouchableOpacity>
   );
 
@@ -98,6 +100,7 @@ export default function ExploreScreen() {
         <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
           <TouchableOpacity
             onPress={quickExit}
+            accessibilityLabel="Quick Exit"
             style={{ paddingVertical: 6, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1.5, borderColor: "#C62828" }}
           >
             <Text style={{ fontWeight: "600", color: "#C62828" }}>Quick Exit</Text>
@@ -123,11 +126,12 @@ export default function ExploreScreen() {
           style={{
             marginTop: 20,
             fontSize: 12,
-            color: "#777",
+            color: "#000",
+            fontWeight: "600",
             textAlign: "center",
           }}
         >
-          Sources: TheHotline.org • WomensLaw.org
+          Sources: TheHotline.org • WomensLaw.org • TechSafety.org
         </Text>
 
       </View>

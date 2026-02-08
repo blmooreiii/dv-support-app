@@ -9,17 +9,23 @@
           "latitude": 32.8797,
           "longitude": -79.9903,
           "verified": true,
+          //"phone": null,
+          //"website": null,
+          //"contactPreference": "website"
           "source": "https://www.mysistershouse.org"
         },
         {
           "id": "sc-002",
-          "name": "Sistercare",
+          "name": "Sistercare Inc",
           "city": "Columbia",
           "state": "SC",
           "address": "P.O. Box 1029, Columbia, SC 29202",
           "latitude": 34.0007,
           "longitude": -81.0348,
           "verified": true,
+           //"phone": null,
+          //"website": null,
+          //"contactPreference": "website"
           "source": "https://www.sistercare.org"
         }
       ],
@@ -33,6 +39,9 @@
       "latitude": 34.8526,
       "longitude": -82.3940,
       "verified": true,
+       //"phone": null,
+       //"website": null,
+       //"contactPreference": "website"
       "source": "static-seed"
     },
     {
@@ -44,6 +53,9 @@
       "latitude": 33.6891,
       "longitude": -78.8867,
       "verified": true,
+       //"phone": null,
+       //"website": null,
+       //"contactPreference": "website"
       "source": "static-seed"
     },
     {
@@ -55,6 +67,9 @@
       "latitude": 34.9249,
       "longitude": -81.0251,
       "verified": true,
+       //"phone": null,
+       //"website": null,
+       //"contactPreference": "website"
       "source": "static-seed"
     }
   ]

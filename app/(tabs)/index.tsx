@@ -164,6 +164,7 @@ export default function HomeScreen() {
     }
   };
 
+  // Opens a neutral, high-traffic site to safely exit the app
   const quickExit = async () => {
     setPrivacyCover(true);
     resetHome();
@@ -189,7 +190,7 @@ export default function HomeScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={{ padding: 16 }}>
         <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
-          <TouchableOpacity onPress={quickExit} style={{ padding: 8, borderRadius: 20, borderWidth: 1.5, borderColor: "#C62828" }}>
+          <TouchableOpacity onPress={quickExit} accessibilityLabel="Quick Exit" style={{ padding: 6, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1.5, borderColor: "#C62828" }}>
             <Text style={{ fontWeight: "600", color: "#C62828" }}>Quick Exit</Text>
           </TouchableOpacity>
         </View>

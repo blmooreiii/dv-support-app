@@ -30,7 +30,7 @@ export default function TabLayout() {
         options={{
           title: "Support",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="help-circle-outline" size={size} color={color} />
+            <Ionicons name="shield-checkmark-outline" size={size} color={color} />
           ),
         }}
       />

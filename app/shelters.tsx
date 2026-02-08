@@ -45,6 +45,7 @@ export default function SheltersScreen() {
     return () => sub.remove();
   }, []);
 
+  // Opens a neutral, high-traffic site to safely exit the app
   const quickExit = async () => {
     setPrivacyCover(true);
     setTimeout(async () => {
@@ -197,6 +198,7 @@ export default function SheltersScreen() {
 
           <TouchableOpacity
             onPress={quickExit}
+            accessibilityLabel="Quick Exit"
             style={{
               paddingVertical: 6,
               paddingHorizontal: 14,
