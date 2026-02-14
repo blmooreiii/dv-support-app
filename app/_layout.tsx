@@ -2,8 +2,11 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-
 import { useColorScheme } from '@/hooks/use-color-scheme';
+
+import { useEffect } from "react";
+import { Platform } from "react-native";
+import * as ScreenCapture from "expo-screen-capture";
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -11,6 +14,20 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    const secureScreen = async () => {
+      try {
+        if (Platform.OS === "android") {
+          await ScreenCapture.preventScreenCaptureAsync();
+        }
+      } catch {
+        // silent fail — security features should never crash the app
+      }
+    };
+
+    secureScreen();
+  }, []);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

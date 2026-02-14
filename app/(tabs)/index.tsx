@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Linking, Platform, SafeAreaView, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
+import {
+  Alert,
+  Linking,
+  Platform,
+  SafeAreaView,
+  Text,
+  TouchableOpacity,
+  View,
+  ActivityIndicator,
+  AppState,
+} from "react-native";
 import * as Location from "expo-location";
 import sheltersData from "../../data/shelters.sc.json";
 import { useRouter } from "expo-router";
-import { AppState } from "react-native";
-
-
-
-
 
 export default function HomeScreen() {
   type Shelter = {
@@ -24,7 +29,6 @@ export default function HomeScreen() {
 
   const router = useRouter();
 
-
   // Flattening the data immediately to prevent nested array issues
   const shelters: Shelter[] = (sheltersData as any).flat();
 
@@ -35,16 +39,13 @@ export default function HomeScreen() {
   const [privacyCover, setPrivacyCover] = useState(false);
 
   useEffect(() => {
-  const sub = AppState.addEventListener("change", (state) => {
-    if (state === "inactive" || state === "background") setPrivacyCover(true);
-    if (state === "active") setTimeout(() => setPrivacyCover(false), 150);
-  });
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "inactive" || state === "background") setPrivacyCover(true);
+      if (state === "active") setTimeout(() => setPrivacyCover(false), 150);
+    });
 
-  return () => sub.remove();
-}, []);
-
-
-  const DEBUG = false;
+    return () => sub.remove();
+  }, []);
 
   const toRad = (v: number) => (v * Math.PI) / 180;
 
@@ -56,21 +57,19 @@ export default function HomeScreen() {
     // Safety check: if coords are missing, return a large distance so it's not "closest"
     if (![a?.latitude, a?.longitude, b?.latitude, b?.longitude].every(Number.isFinite)) return 999999;
 
-
     const R = 3958.8;
     const dLat = toRad(b.latitude - a.latitude);
     const dLon = toRad(b.longitude - a.longitude);
-  
+
     const lat1 = toRad(a.latitude);
     const lat2 = toRad(b.latitude);
-  
+
     const h =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
-  
+      Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+
     return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
   };
-  
+
   const findClosestShelter = (user: { latitude: number; longitude: number }, list: Shelter[]) => {
     let closest: (Shelter & { distanceMiles: number }) | null = null;
 
@@ -87,51 +86,50 @@ export default function HomeScreen() {
     try {
       setStatus("requesting");
       setErrorMsg("");
-  
+
       const existing = await Location.getForegroundPermissionsAsync();
       let permStatus = existing.status;
-  
+
       if (permStatus !== "granted") {
         const req = await Location.requestForegroundPermissionsAsync();
         permStatus = req.status;
       }
-  
+
       if (permStatus !== "granted") {
         setStatus("denied");
         return;
       }
-  
+
       const servicesEnabled = await Location.hasServicesEnabledAsync();
       if (!servicesEnabled) {
         setStatus("error");
         setErrorMsg("Location Services are off. Enable them in Settings.");
         return;
       }
-  
-      // Using Highest accuracy for the best results, though Balanced is faster
+
       const current = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
-  
+
       const lat = Number(current.coords.latitude);
       const lon = Number(current.coords.longitude);
-  
+
       if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
         setStatus("error");
         setErrorMsg("Invalid location data received.");
         return;
       }
-  
+
       const userCoords = { latitude: lat, longitude: lon };
       setCoords(userCoords);
-  
+
       const closest = findClosestShelter(userCoords, shelters);
       if (!closest) {
         setStatus("error");
         setErrorMsg("No shelter data found.");
         return;
       }
-  
+
       setSelectedShelter(closest);
       setStatus("granted");
     } catch (e: any) {
@@ -150,7 +148,6 @@ export default function HomeScreen() {
   const openMapsToDestination = async (destination: { latitude: number; longitude: number }) => {
     const { latitude, longitude } = destination;
 
-    // Fixed Google Maps URL string
     const url =
       Platform.OS === "ios"
         ? `http://maps.apple.com/?daddr=${latitude},${longitude}`
@@ -158,9 +155,9 @@ export default function HomeScreen() {
 
     const canOpen = await Linking.canOpenURL(url);
     if (canOpen) {
-        await Linking.openURL(url);
+      await Linking.openURL(url);
     } else {
-        Alert.alert("Error", "Could not open Maps app.");
+      Alert.alert("Error", "Could not open Maps app.");
     }
   };
 
@@ -168,7 +165,7 @@ export default function HomeScreen() {
   const quickExit = async () => {
     setPrivacyCover(true);
     resetHome();
-  
+
     const safeUrl = "https://www.weather.com";
     setTimeout(async () => {
       try {
@@ -176,7 +173,6 @@ export default function HomeScreen() {
       } catch {}
     }, 120);
   };
-  
 
   const offlineFallback = () => {
     Alert.alert(
@@ -187,10 +183,20 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <View style={{ padding: 16 }}>
         <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
-          <TouchableOpacity onPress={quickExit} accessibilityLabel="Quick Exit" style={{ padding: 6, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1.5, borderColor: "#C62828" }}>
+          <TouchableOpacity
+            onPress={quickExit}
+            accessibilityLabel="Quick Exit"
+            style={{
+              padding: 6,
+              paddingHorizontal: 14,
+              borderRadius: 999,
+              borderWidth: 1.5,
+              borderColor: "#C62828",
+            }}
+          >
             <Text style={{ fontWeight: "600", color: "#C62828" }}>Quick Exit</Text>
           </TouchableOpacity>
         </View>
@@ -200,28 +206,71 @@ export default function HomeScreen() {
           <Text style={{ fontSize: 16 }}>We can help you find nearby support fast.</Text>
 
           {status === "requesting" ? (
-            <View style={{ padding: 40, alignItems: 'center' }}>
+            <View style={{ padding: 40, alignItems: "center" }}>
               <ActivityIndicator size="large" color="#000" />
               <Text style={{ marginTop: 10 }}>Finding nearest shelter...</Text>
             </View>
           ) : (
             <TouchableOpacity
               onPress={requestLocation}
-              style={{ padding: 20, borderRadius: 16, backgroundColor: "#000", alignItems: "center" }}
+              style={{
+                padding: 20,
+                borderRadius: 16,
+                backgroundColor: "#000",
+                alignItems: "center",
+              }}
             >
               <Text style={{ fontSize: 18, fontWeight: "700", color: "#fff" }}>Find Help</Text>
-              <Text style={{ marginTop: 6, color: "#ccc", textAlign: "center" }}>We use your location only to find nearby help.</Text>
+              <Text style={{ marginTop: 6, color: "#ccc", textAlign: "center" }}>
+                We use your location only to find nearby help.
+              </Text>
             </TouchableOpacity>
           )}
 
-          {errorMsg ? <Text style={{ color: "crimson", textAlign: 'center' }}>{errorMsg}</Text> : null}
+          {status === "denied" && (
+            <View
+              style={{
+                marginTop: 12,
+                padding: 12,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: "#ddd",
+                backgroundColor: "#fff",
+              }}
+            >
+              <Text style={{ fontWeight: "700", textAlign: "center" }}>Location access is off</Text>
+              <Text style={{ marginTop: 6, color: "#444", textAlign: "center" }}>
+                You can still use Resources & Hotlines, or enable location to sort shelters by nearest.
+              </Text>
+
+              <TouchableOpacity
+                onPress={() => Linking.openSettings()}
+                style={{
+                  marginTop: 10,
+                  padding: 12,
+                  borderRadius: 10,
+                  backgroundColor: "#eee",
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ fontWeight: "600" }}>Open Settings</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {status === "error" && errorMsg ? (
+            <Text style={{ color: "crimson", textAlign: "center" }}>{errorMsg}</Text>
+          ) : null}
 
           {status === "granted" && selectedShelter && (
             <View style={{ borderWidth: 1, borderRadius: 12, padding: 16, marginTop: 10 }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                 <Text style={{ fontSize: 18, fontWeight: "700" }}>Shelter Found</Text>
-                <TouchableOpacity onPress={resetHome}><Text style={{ fontWeight: "600" }}>Start Over</Text></TouchableOpacity>
+                <TouchableOpacity onPress={resetHome}>
+                  <Text style={{ fontWeight: "600" }}>Start Over</Text>
+                </TouchableOpacity>
               </View>
+
               <View
                 style={{
                   flexDirection: "row",
@@ -245,19 +294,23 @@ export default function HomeScreen() {
                       backgroundColor: "#E8F3FF",
                     }}
                   >
-                    <Text style={{ fontSize: 12, fontWeight: "700", color: "#1D9BF0" }}>
-                      Verified
-                    </Text>
+                    <Text style={{ fontSize: 12, fontWeight: "700", color: "#1D9BF0" }}>Verified</Text>
                   </View>
                 )}
               </View>
 
-              <Text style={{ color: '#666' }}>{selectedShelter.distanceMiles.toFixed(1)} miles away</Text>
-              
+              <Text style={{ color: "#666" }}>{selectedShelter.distanceMiles.toFixed(1)} miles away</Text>
+
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 <TouchableOpacity
                   onPress={() => openMapsToDestination(selectedShelter)}
-                  style={{ flex: 1, padding: 12, borderRadius: 10, backgroundColor: "#eee", alignItems: "center" }}
+                  style={{
+                    flex: 1,
+                    padding: 12,
+                    borderRadius: 10,
+                    backgroundColor: "#eee",
+                    alignItems: "center",
+                  }}
                 >
                   <Text style={{ fontWeight: "600" }}>Start Directions</Text>
                 </TouchableOpacity>
@@ -272,42 +325,56 @@ export default function HomeScreen() {
                       },
                     });
                   }}
-                  style={{ flex: 1, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: "#ddd", alignItems: "center" }}
+                  style={{
+                    flex: 1,
+                    padding: 12,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: "#ddd",
+                    alignItems: "center",
+                  }}
                 >
                   <Text style={{ fontWeight: "600" }}>Other Shelters</Text>
                 </TouchableOpacity>
               </View>
-
-              
             </View>
           )}
 
-          <TouchableOpacity onPress={offlineFallback} style={{ padding: 14, borderRadius: 12, borderWidth: 1, borderColor: "#ccc", alignItems: "center", marginTop: 10 }}>
+          <TouchableOpacity
+            onPress={offlineFallback}
+            style={{
+              padding: 14,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: "#ccc",
+              alignItems: "center",
+              marginTop: 10,
+            }}
+          >
             <Text style={{ fontSize: 16, fontWeight: "500" }}>Resources & Hotlines</Text>
           </TouchableOpacity>
         </View>
       </View>
+
       {privacyCover && (
-  <View
-    style={{
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "#fff",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 24,
-      zIndex: 9999,
-      elevation: 9999,
-    }}
-  >
-    <Text style={{ fontSize: 18, fontWeight: "700" }}>Loading...</Text>
-  </View>
-)}
-
-
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "#fff",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 24,
+            zIndex: 9999,
+            elevation: 9999,
+          }}
+        >
+          <Text style={{ fontSize: 18, fontWeight: "700" }}>One moment…</Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
