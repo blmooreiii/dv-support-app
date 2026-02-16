@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Linking,
@@ -13,30 +13,70 @@ import {
 import * as Location from "expo-location";
 import sheltersData from "../../data/shelters.sc.json";
 import { useRouter } from "expo-router";
+import { Shelter, validateSheltersRuntime } from "../../src/utils/validateShelters";
+
+
+const FALLBACK_DISTANCE = 999999;
+const EMPTY_STATE_MESSAGE =
+  "Support listings temporarily unavailable. Please use Resources & Hotlines.";
+
+type UiNotice =
+  | { kind: "none" }
+  | { kind: "info"; message: string }
+  | { kind: "warning"; message: string };
+
+function resolveNotice(params: {
+  errorMsg?: string;
+  locationDenied: boolean;
+  servicesOff: boolean;
+  sheltersCount: number;
+  allDistancesFallback: boolean;
+}): UiNotice {
+  // Highest priority: explicit error message lane
+  if (params.errorMsg) return { kind: "warning", message: params.errorMsg };
+
+  if (params.servicesOff)
+    return {
+      kind: "warning",
+      message: "Location Services are off. You can still use Resources & Hotlines.",
+    };
+
+  if (params.locationDenied)
+    return {
+      kind: "info",
+      message:
+        "Location access is off. You can still use Resources & Hotlines, or enable location to sort shelters by nearest.",
+    };
+
+  // Data integrity states (quiet + controlled)
+  if (params.sheltersCount === 0 || params.allDistancesFallback)
+    return { kind: "warning", message: EMPTY_STATE_MESSAGE };
+
+  return { kind: "none" };
+}
 
 export default function HomeScreen() {
-  type Shelter = {
-    id: string;
-    name: string;
-    city: string;
-    state: "SC";
-    address: string;
-    latitude: number;
-    longitude: number;
-    verified: boolean;
-    source: string;
-  };
-
   const router = useRouter();
 
-  // Flattening the data immediately to prevent nested array issues
-  const shelters: Shelter[] = (sheltersData as any).flat();
+  const shelters: Shelter[] = useMemo(() => {
+    const flattened = (sheltersData as any)?.flat?.() ?? [];
+    return validateSheltersRuntime(flattened);
+  }, []);
 
-  const [status, setStatus] = useState<"idle" | "requesting" | "granted" | "denied" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "requesting" | "granted" | "denied" | "error">(
+    "idle"
+  );
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>("");
-  const [selectedShelter, setSelectedShelter] = useState<(Shelter & { distanceMiles: number }) | null>(null);
+
+  const [selectedShelter, setSelectedShelter] = useState<(Shelter & { distanceMiles: number }) | null>(
+    null
+  );
+
   const [privacyCover, setPrivacyCover] = useState(false);
+
+  // v0.4 unified state flags
+  const [servicesOff, setServicesOff] = useState(false);
 
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
@@ -49,13 +89,12 @@ export default function HomeScreen() {
 
   const toRad = (v: number) => (v * Math.PI) / 180;
 
-  // Haversine distance with safety checks to prevent NaN
   const distanceMiles = (
-    a: { latitude: number; longitude: number },
-    b: { latitude: number; longitude: number }
+    a: { latitude: number; longitude: number } | null,
+    b: { latitude: number; longitude: number } | null
   ) => {
-    // Safety check: if coords are missing, return a large distance so it's not "closest"
-    if (![a?.latitude, a?.longitude, b?.latitude, b?.longitude].every(Number.isFinite)) return 999999;
+    if (!a || !b) return FALLBACK_DISTANCE;
+    if (![a.latitude, a.longitude, b.latitude, b.longitude].every(Number.isFinite)) return FALLBACK_DISTANCE;
 
     const R = 3958.8;
     const dLat = toRad(b.latitude - a.latitude);
@@ -67,14 +106,30 @@ export default function HomeScreen() {
     const h =
       Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
 
-    return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+    const miles = 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+    return Number.isFinite(miles) ? miles : FALLBACK_DISTANCE;
   };
+
+  const isValidDistance = (d: number) =>
+    Number.isFinite(d) && d >= 0 && d < FALLBACK_DISTANCE;
+
+  const allDistancesFallback = useMemo(() => {
+    if (!coords) return false;
+    if (shelters.length === 0) return true;
+
+    // If every shelter computes to fallback, we treat it as controlled empty state.
+    return shelters.every((s) => {
+      const d = distanceMiles(coords, { latitude: s.latitude, longitude: s.longitude });
+      return !isValidDistance(d);
+    });
+  }, [coords, shelters]);
 
   const findClosestShelter = (user: { latitude: number; longitude: number }, list: Shelter[]) => {
     let closest: (Shelter & { distanceMiles: number }) | null = null;
 
     for (const s of list) {
       const d = distanceMiles(user, { latitude: s.latitude, longitude: s.longitude });
+      if (!isValidDistance(d)) continue; // v0.4 deterministic guard: ignore fallback distances
       if (!closest || d < closest.distanceMiles) {
         closest = { ...s, distanceMiles: d };
       }
@@ -86,7 +141,10 @@ export default function HomeScreen() {
     try {
       setStatus("requesting");
       setErrorMsg("");
+      setServicesOff(false);
 
+      // v0.4: if shelters are invalid/empty, we still do not crash —
+      // but we can short-circuit to controlled empty state after permission checks.
       const existing = await Location.getForegroundPermissionsAsync();
       let permStatus = existing.status;
 
@@ -102,8 +160,8 @@ export default function HomeScreen() {
 
       const servicesEnabled = await Location.hasServicesEnabledAsync();
       if (!servicesEnabled) {
+        setServicesOff(true);
         setStatus("error");
-        setErrorMsg("Location Services are off. Enable them in Settings.");
         return;
       }
 
@@ -123,10 +181,19 @@ export default function HomeScreen() {
       const userCoords = { latitude: lat, longitude: lon };
       setCoords(userCoords);
 
-      const closest = findClosestShelter(userCoords, shelters);
-      if (!closest) {
+      // v0.4: controlled empty state if shelters are empty OR all distances fallback
+      if (shelters.length === 0) {
         setStatus("error");
-        setErrorMsg("No shelter data found.");
+        // leave errorMsg empty → unified notice will show controlled message
+        return;
+      }
+
+      const closest = findClosestShelter(userCoords, shelters);
+
+      if (!closest) {
+        // This covers: all distances fallback, or data unusable even after validation.
+        setStatus("error");
+        // no errorMsg → unified notice handles controlled empty state
         return;
       }
 
@@ -142,11 +209,18 @@ export default function HomeScreen() {
     setStatus("idle");
     setCoords(null);
     setErrorMsg("");
+    setServicesOff(false);
     setSelectedShelter(null);
   };
 
   const openMapsToDestination = async (destination: { latitude: number; longitude: number }) => {
     const { latitude, longitude } = destination;
+
+    // v0.4: hard guard — do not attempt maps if coords are invalid
+    if (![latitude, longitude].every(Number.isFinite)) {
+      Alert.alert("Error", "Destination coordinates unavailable.");
+      return;
+    }
 
     const url =
       Platform.OS === "ios"
@@ -181,6 +255,19 @@ export default function HomeScreen() {
       [{ text: "OK" }]
     );
   };
+
+  const notice: UiNotice = resolveNotice({
+    errorMsg: status === "error" ? errorMsg : undefined,
+    locationDenied: status === "denied",
+    servicesOff,
+    sheltersCount: shelters.length,
+    allDistancesFallback: Boolean(coords) && allDistancesFallback,
+  });
+
+  const showShelterCard =
+    status === "granted" &&
+    selectedShelter &&
+    isValidDistance(selectedShelter.distanceMiles);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
@@ -227,42 +314,51 @@ export default function HomeScreen() {
             </TouchableOpacity>
           )}
 
-          {status === "denied" && (
+          {/* v0.4 Unified Notice Surface (single lane) */}
+          {notice.kind !== "none" && (
             <View
               style={{
                 marginTop: 12,
                 padding: 12,
                 borderRadius: 12,
                 borderWidth: 1,
-                borderColor: "#ddd",
+                borderColor: notice.kind === "warning" ? "#f0c2c2" : "#d8e7ff",
                 backgroundColor: "#fff",
               }}
             >
-              <Text style={{ fontWeight: "700", textAlign: "center" }}>Location access is off</Text>
-              <Text style={{ marginTop: 6, color: "#444", textAlign: "center" }}>
-                You can still use Resources & Hotlines, or enable location to sort shelters by nearest.
-              </Text>
-
-              <TouchableOpacity
-                onPress={() => Linking.openSettings()}
+              <Text
                 style={{
-                  marginTop: 10,
-                  padding: 12,
-                  borderRadius: 10,
-                  backgroundColor: "#eee",
-                  alignItems: "center",
+                  fontWeight: "700",
+                  textAlign: "center",
+                  color: notice.kind === "warning" ? "crimson" : "#0b3d91",
                 }}
               >
-                <Text style={{ fontWeight: "600" }}>Open Settings</Text>
-              </TouchableOpacity>
+                {notice.kind === "warning" ? "Notice" : "Info"}
+              </Text>
+
+              <Text style={{ marginTop: 6, color: "#444", textAlign: "center" }}>
+                {notice.message}
+              </Text>
+
+              {status === "denied" && (
+                <TouchableOpacity
+                  onPress={() => Linking.openSettings()}
+                  style={{
+                    marginTop: 10,
+                    padding: 12,
+                    borderRadius: 10,
+                    backgroundColor: "#eee",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ fontWeight: "600" }}>Open Settings</Text>
+                </TouchableOpacity>
+              )}
             </View>
           )}
 
-          {status === "error" && errorMsg ? (
-            <Text style={{ color: "crimson", textAlign: "center" }}>{errorMsg}</Text>
-          ) : null}
-
-          {status === "granted" && selectedShelter && (
+          {/* v0.4 Shelter Card only when distance is real (not fallback) */}
+          {showShelterCard && (
             <View style={{ borderWidth: 1, borderRadius: 12, padding: 16, marginTop: 10 }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
                 <Text style={{ fontSize: 18, fontWeight: "700" }}>Shelter Found</Text>
@@ -294,12 +390,16 @@ export default function HomeScreen() {
                       backgroundColor: "#E8F3FF",
                     }}
                   >
-                    <Text style={{ fontSize: 12, fontWeight: "700", color: "#1D9BF0" }}>Verified</Text>
+                    <Text style={{ fontSize: 12, fontWeight: "700", color: "#1D9BF0" }}>
+                      Verified
+                    </Text>
                   </View>
                 )}
               </View>
 
-              <Text style={{ color: "#666" }}>{selectedShelter.distanceMiles.toFixed(1)} miles away</Text>
+              <Text style={{ color: "#666" }}>
+                {selectedShelter.distanceMiles.toFixed(1)} miles away
+              </Text>
 
               <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
                 <TouchableOpacity
