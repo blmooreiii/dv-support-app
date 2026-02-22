@@ -1,24 +1,33 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
+  ActivityIndicator,
   Alert,
   Linking,
   Platform,
-  SafeAreaView,
+
+  ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  ActivityIndicator,
-  AppState,
 } from "react-native";
 import * as Location from "expo-location";
 import sheltersData from "../../data/shelters.sc.json";
 import { useRouter } from "expo-router";
-import { Shelter, validateSheltersRuntime } from "../../src/utils/validateShelters";
+import {
+  Shelter,
+  validateSheltersRuntime,
+  canGetDirections,
+  getCallForAddressNote,
+} from "@/src/utils/validateShelters";
+import { quickExit } from "@/src/utils/quickExit";
+import { PrivacyCover, usePrivacyCover } from "@/components/PrivacyCover";
+import { Colors, Spacing, Radius, Shadows } from "@/constants/theme";
 
-
+const C = Colors.light;
 const FALLBACK_DISTANCE = 999999;
-const EMPTY_STATE_MESSAGE =
-  "Support listings temporarily unavailable. Please use Resources & Hotlines.";
+const GPS_TIMEOUT_MS = 9000;
 
 type UiNotice =
   | { kind: "none" }
@@ -32,60 +41,156 @@ function resolveNotice(params: {
   sheltersCount: number;
   allDistancesFallback: boolean;
 }): UiNotice {
-  // Highest priority: explicit error message lane
   if (params.errorMsg) return { kind: "warning", message: params.errorMsg };
-
   if (params.servicesOff)
-    return {
-      kind: "warning",
-      message: "Location Services are off. You can still use Resources & Hotlines.",
-    };
-
+    return { kind: "warning", message: "Location Services are off. You can still use Resources & Hotlines." };
   if (params.locationDenied)
-    return {
-      kind: "info",
-      message:
-        "Location access is off. You can still use Resources & Hotlines, or enable location to sort shelters by nearest.",
-    };
-
-  // Data integrity states (quiet + controlled)
+    return { kind: "info", message: "Location access is off. You can still browse Resources & Hotlines, or enable location to sort shelters by nearest." };
   if (params.sheltersCount === 0 || params.allDistancesFallback)
-    return { kind: "warning", message: EMPTY_STATE_MESSAGE };
-
+    return { kind: "warning", message: "Support listings temporarily unavailable. Please use Resources & Hotlines." };
   return { kind: "none" };
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number) {
+  return Promise.race<T>([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error("TIMEOUT")), ms)),
+  ]);
+}
+
+function QuickExitButton({ onPress }: { onPress: () => void }) {
+  return (
+    <TouchableOpacity onPress={onPress} accessibilityLabel="Quick Exit" style={styles.quickExit}>
+      <View style={styles.quickExitDot} />
+      <Text style={styles.quickExitText}>Quick Exit</Text>
+    </TouchableOpacity>
+  );
+}
+
+function NoticeBanner({ notice, onRetry, onOpenSettings }: {
+  notice: UiNotice;
+  onRetry?: () => void;
+  onOpenSettings?: () => void;
+}) {
+  if (notice.kind === "none") return null;
+  const warn = notice.kind === "warning";
+  return (
+    <View style={[styles.notice, warn ? styles.noticeWarn : styles.noticeInfo]}>
+      <View style={[styles.noticeDot, warn ? styles.noticeDotWarn : styles.noticeDotInfo]} />
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.noticeText, warn ? styles.noticeTextWarn : styles.noticeTextInfo]}>
+          {notice.message}
+        </Text>
+        {onOpenSettings && (
+          <TouchableOpacity onPress={onOpenSettings} style={styles.noticeAction}>
+            <Text style={styles.noticeActionText}>Open Settings</Text>
+          </TouchableOpacity>
+        )}
+        {onRetry && (
+          <TouchableOpacity onPress={onRetry} style={styles.noticeAction}>
+            <Text style={styles.noticeActionText}>Retry</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  );
+}
+
+function ShelterCard({ shelter, onDirections, onOtherShelters, onReset }: {
+  shelter: Shelter & { distanceMiles: number };
+  onDirections: () => void;
+  onOtherShelters: () => void;
+  onReset: () => void;
+}) {
+  const callOnly = !canGetDirections(shelter);
+  const phone = shelter.phone ?? (shelter as any).hotline;
+  return (
+    <View style={styles.shelterCard}>
+      <View style={styles.cardHeader}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardFoundLabel}>Closest to you</Text>
+          <Text style={styles.cardName}>{shelter.name}</Text>
+        </View>
+        {shelter.verified && (
+          <View style={styles.verifiedBadge}>
+            <Text style={styles.verifiedText}>✓ Verified</Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.cardMeta}>
+        <View style={styles.metaItem}>
+          <Text style={styles.metaLabel}>Distance</Text>
+          <Text style={styles.metaValue}>{callOnly ? "~" : ""}{shelter.distanceMiles.toFixed(1)} mi</Text>
+        </View>
+        <View style={styles.metaItem}>
+          <Text style={styles.metaLabel}>City</Text>
+          <Text style={styles.metaValue}>{shelter.city}</Text>
+        </View>
+        {(shelter as any).hasPetOptions !== undefined && (
+          <View style={styles.metaItem}>
+            <Text style={styles.metaLabel}>Pet Friendly</Text>
+            <Text style={styles.metaValue}>{(shelter as any).hasPetOptions ? "Yes" : "—"}</Text>
+          </View>
+        )}
+      </View>
+
+      {callOnly && (
+        <View style={styles.callWrap}>
+          <View style={styles.callCard}>
+            <View style={styles.callIconRow}>
+              <View style={styles.callIconBox}><Text style={{ fontSize: 16 }}>📞</Text></View>
+              <Text style={styles.callTitle}>Call for location</Text>
+            </View>
+            <Text style={styles.callNote}>{getCallForAddressNote(shelter)}</Text>
+            {phone && (
+              <TouchableOpacity
+                onPress={() => Linking.openURL(`tel:${phone.replace(/\D/g, "")}`)}
+                style={styles.callBtn}
+                accessibilityLabel={`Call ${phone}`}
+              >
+                <Text style={styles.callBtnText}>{phone}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      )}
+
+      <View style={styles.cardActions}>
+        {!callOnly && (
+          <TouchableOpacity onPress={onDirections} style={styles.btnPrimary}>
+            <Text style={styles.btnPrimaryText}>Start Directions</Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity
+          onPress={onOtherShelters}
+          style={[styles.btnSecondary, callOnly && { flex: 1 }]}
+        >
+          <Text style={styles.btnSecondaryText}>Other Shelters</Text>
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity onPress={onReset} style={styles.resetRow}>
+        <Text style={styles.resetText}>Start Over</Text>
+      </TouchableOpacity>
+    </View>
+  );
 }
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { privacyCover, setPrivacyCover } = usePrivacyCover();
 
   const shelters: Shelter[] = useMemo(() => {
     const flattened = (sheltersData as any)?.flat?.() ?? [];
     return validateSheltersRuntime(flattened);
   }, []);
 
-  const [status, setStatus] = useState<"idle" | "requesting" | "granted" | "denied" | "error">(
-    "idle"
-  );
+  const [status, setStatus] = useState<"idle" | "requesting" | "granted" | "denied" | "error">("idle");
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string>("");
-
-  const [selectedShelter, setSelectedShelter] = useState<(Shelter & { distanceMiles: number }) | null>(
-    null
-  );
-
-  const [privacyCover, setPrivacyCover] = useState(false);
-
-  // v0.4 unified state flags
+  const [errorMsg, setErrorMsg] = useState("");
+  const [selectedShelter, setSelectedShelter] = useState<(Shelter & { distanceMiles: number }) | null>(null);
   const [servicesOff, setServicesOff] = useState(false);
-
-  useEffect(() => {
-    const sub = AppState.addEventListener("change", (state) => {
-      if (state === "inactive" || state === "background") setPrivacyCover(true);
-      if (state === "active") setTimeout(() => setPrivacyCover(false), 150);
-    });
-
-    return () => sub.remove();
-  }, []);
 
   const toRad = (v: number) => (v * Math.PI) / 180;
 
@@ -95,168 +200,82 @@ export default function HomeScreen() {
   ) => {
     if (!a || !b) return FALLBACK_DISTANCE;
     if (![a.latitude, a.longitude, b.latitude, b.longitude].every(Number.isFinite)) return FALLBACK_DISTANCE;
-
     const R = 3958.8;
     const dLat = toRad(b.latitude - a.latitude);
     const dLon = toRad(b.longitude - a.longitude);
-
-    const lat1 = toRad(a.latitude);
-    const lat2 = toRad(b.latitude);
-
-    const h =
-      Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
-
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.latitude)) * Math.cos(toRad(b.latitude)) * Math.sin(dLon / 2) ** 2;
     const miles = 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
     return Number.isFinite(miles) ? miles : FALLBACK_DISTANCE;
   };
 
-  const isValidDistance = (d: number) =>
-    Number.isFinite(d) && d >= 0 && d < FALLBACK_DISTANCE;
+  const isValid = (d: number) => Number.isFinite(d) && d >= 0 && d < FALLBACK_DISTANCE;
 
   const allDistancesFallback = useMemo(() => {
-    if (!coords) return false;
-    if (shelters.length === 0) return true;
-
-    // If every shelter computes to fallback, we treat it as controlled empty state.
-    return shelters.every((s) => {
-      const d = distanceMiles(coords, { latitude: s.latitude, longitude: s.longitude });
-      return !isValidDistance(d);
-    });
+    if (!coords || shelters.length === 0) return !coords ? false : true;
+    return shelters.every((s) => !isValid(distanceMiles(coords, s)));
   }, [coords, shelters]);
 
-  const findClosestShelter = (user: { latitude: number; longitude: number }, list: Shelter[]) => {
+  const findClosest = (user: { latitude: number; longitude: number }, list: Shelter[]) => {
     let closest: (Shelter & { distanceMiles: number }) | null = null;
-
     for (const s of list) {
-      const d = distanceMiles(user, { latitude: s.latitude, longitude: s.longitude });
-      if (!isValidDistance(d)) continue; // v0.4 deterministic guard: ignore fallback distances
-      if (!closest || d < closest.distanceMiles) {
-        closest = { ...s, distanceMiles: d };
-      }
+      const d = distanceMiles(user, s);
+      if (!isValid(d)) continue;
+      if (!closest || d < closest.distanceMiles) closest = { ...s, distanceMiles: d };
     }
     return closest;
   };
 
   const requestLocation = async () => {
     try {
-      setStatus("requesting");
-      setErrorMsg("");
-      setServicesOff(false);
-
-      // v0.4: if shelters are invalid/empty, we still do not crash —
-      // but we can short-circuit to controlled empty state after permission checks.
+      setStatus("requesting"); setErrorMsg(""); setServicesOff(false);
       const existing = await Location.getForegroundPermissionsAsync();
-      let permStatus = existing.status;
+      let perm = existing.status;
+      if (perm !== "granted") perm = (await Location.requestForegroundPermissionsAsync()).status;
+      if (perm !== "granted") { setStatus("denied"); return; }
+      if (!(await Location.hasServicesEnabledAsync())) { setServicesOff(true); setStatus("error"); return; }
 
-      if (permStatus !== "granted") {
-        const req = await Location.requestForegroundPermissionsAsync();
-        permStatus = req.status;
+      let lat: number | null = null, lon: number | null = null;
+      try {
+        const cur = await withTimeout(Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }), GPS_TIMEOUT_MS);
+        lat = Number(cur.coords.latitude); lon = Number(cur.coords.longitude);
+      } catch (e: any) {
+        const last = await Location.getLastKnownPositionAsync();
+        if (last?.coords) { lat = Number(last.coords.latitude); lon = Number(last.coords.longitude); }
+        else {
+          setStatus("error");
+          setErrorMsg(e?.message === "TIMEOUT" ? "Location is taking too long. Try moving near a window, then retry." : "Unable to get your location. Please try again.");
+          return;
+        }
       }
 
-      if (permStatus !== "granted") {
-        setStatus("denied");
-        return;
-      }
-
-      const servicesEnabled = await Location.hasServicesEnabledAsync();
-      if (!servicesEnabled) {
-        setServicesOff(true);
-        setStatus("error");
-        return;
-      }
-
-      const current = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
-
-      const lat = Number(current.coords.latitude);
-      const lon = Number(current.coords.longitude);
-
-      if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-        setStatus("error");
-        setErrorMsg("Invalid location data received.");
-        return;
-      }
-
-      const userCoords = { latitude: lat, longitude: lon };
-      setCoords(userCoords);
-
-      // v0.4: controlled empty state if shelters are empty OR all distances fallback
-      if (shelters.length === 0) {
-        setStatus("error");
-        // leave errorMsg empty → unified notice will show controlled message
-        return;
-      }
-
-      const closest = findClosestShelter(userCoords, shelters);
-
-      if (!closest) {
-        // This covers: all distances fallback, or data unusable even after validation.
-        setStatus("error");
-        // no errorMsg → unified notice handles controlled empty state
-        return;
-      }
-
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) { setStatus("error"); setErrorMsg("Invalid location data received."); return; }
+      const user = { latitude: lat!, longitude: lon! };
+      setCoords(user);
+      if (shelters.length === 0) { setStatus("error"); return; }
+      const closest = findClosest(user, shelters);
+      if (!closest) { setStatus("error"); return; }
       setSelectedShelter(closest);
       setStatus("granted");
     } catch (e: any) {
-      setStatus("error");
-      setErrorMsg(e?.message ?? "Error accessing location.");
+      setStatus("error"); setErrorMsg(e?.message ?? "Error accessing location.");
     }
   };
 
   const resetHome = () => {
-    setStatus("idle");
-    setCoords(null);
-    setErrorMsg("");
-    setServicesOff(false);
-    setSelectedShelter(null);
+    setStatus("idle"); setCoords(null); setErrorMsg("");
+    setServicesOff(false); setSelectedShelter(null);
   };
 
-  const openMapsToDestination = async (destination: { latitude: number; longitude: number }) => {
-    const { latitude, longitude } = destination;
-
-    // v0.4: hard guard — do not attempt maps if coords are invalid
-    if (![latitude, longitude].every(Number.isFinite)) {
-      Alert.alert("Error", "Destination coordinates unavailable.");
-      return;
-    }
-
-    const url =
-      Platform.OS === "ios"
-        ? `http://maps.apple.com/?daddr=${latitude},${longitude}`
-        : `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
-
+  const openMaps = async (dest: { latitude: number; longitude: number }) => {
+    const url = Platform.OS === "ios"
+      ? `http://maps.apple.com/?daddr=${dest.latitude},${dest.longitude}`
+      : `https://www.google.com/maps/dir/?api=1&destination=${dest.latitude},${dest.longitude}`;
     const canOpen = await Linking.canOpenURL(url);
-    if (canOpen) {
-      await Linking.openURL(url);
-    } else {
-      Alert.alert("Error", "Could not open Maps app.");
-    }
+    if (canOpen) await Linking.openURL(url);
+    else Alert.alert("Error", "Could not open Maps app.");
   };
 
-  // Opens a neutral, high-traffic site to safely exit the app
-  const quickExit = async () => {
-    setPrivacyCover(true);
-    resetHome();
-
-    const safeUrl = "https://www.weather.com";
-    setTimeout(async () => {
-      try {
-        await Linking.openURL(safeUrl);
-      } catch {}
-    }, 120);
-  };
-
-  const offlineFallback = () => {
-    Alert.alert(
-      "Direct Support",
-      "National Domestic Violence Hotline:\n\n📞 1-800-799-7233\n📱 Text START to 88788",
-      [{ text: "OK" }]
-    );
-  };
-
-  const notice: UiNotice = resolveNotice({
+  const notice = resolveNotice({
     errorMsg: status === "error" ? errorMsg : undefined,
     locationDenied: status === "denied",
     servicesOff,
@@ -264,217 +283,147 @@ export default function HomeScreen() {
     allDistancesFallback: Boolean(coords) && allDistancesFallback,
   });
 
-  const showShelterCard =
-    status === "granted" &&
-    selectedShelter &&
-    isValidDistance(selectedShelter.distanceMiles);
+  const showCard = status === "granted" && selectedShelter && isValid(selectedShelter.distanceMiles);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
-      <View style={{ padding: 16 }}>
-        <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
-          <TouchableOpacity
-            onPress={quickExit}
-            accessibilityLabel="Quick Exit"
-            style={{
-              padding: 6,
-              paddingHorizontal: 14,
-              borderRadius: 999,
-              borderWidth: 1.5,
-              borderColor: "#C62828",
-            }}
-          >
-            <Text style={{ fontWeight: "600", color: "#C62828" }}>Quick Exit</Text>
-          </TouchableOpacity>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+
+        <View style={styles.header}>
+          <Text style={styles.appName}>Bastet</Text>
+          <QuickExitButton onPress={() => quickExit(setPrivacyCover, resetHome)} />
         </View>
 
-        <View style={{ marginTop: 40, gap: 12 }}>
-          <Text style={{ fontSize: 28, fontWeight: "700" }}>You’re not alone.</Text>
-          <Text style={{ fontSize: 16 }}>We can help you find nearby support fast.</Text>
-
-          {status === "requesting" ? (
-            <View style={{ padding: 40, alignItems: "center" }}>
-              <ActivityIndicator size="large" color="#000" />
-              <Text style={{ marginTop: 10 }}>Finding nearest shelter...</Text>
-            </View>
-          ) : (
-            <TouchableOpacity
-              onPress={requestLocation}
-              style={{
-                padding: 20,
-                borderRadius: 16,
-                backgroundColor: "#000",
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ fontSize: 18, fontWeight: "700", color: "#fff" }}>Find Help</Text>
-              <Text style={{ marginTop: 6, color: "#ccc", textAlign: "center" }}>
-                We use your location only to find nearby help.
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {/* v0.4 Unified Notice Surface (single lane) */}
-          {notice.kind !== "none" && (
-            <View
-              style={{
-                marginTop: 12,
-                padding: 12,
-                borderRadius: 12,
-                borderWidth: 1,
-                borderColor: notice.kind === "warning" ? "#f0c2c2" : "#d8e7ff",
-                backgroundColor: "#fff",
-              }}
-            >
-              <Text
-                style={{
-                  fontWeight: "700",
-                  textAlign: "center",
-                  color: notice.kind === "warning" ? "crimson" : "#0b3d91",
-                }}
-              >
-                {notice.kind === "warning" ? "Notice" : "Info"}
-              </Text>
-
-              <Text style={{ marginTop: 6, color: "#444", textAlign: "center" }}>
-                {notice.message}
-              </Text>
-
-              {status === "denied" && (
-                <TouchableOpacity
-                  onPress={() => Linking.openSettings()}
-                  style={{
-                    marginTop: 10,
-                    padding: 12,
-                    borderRadius: 10,
-                    backgroundColor: "#eee",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text style={{ fontWeight: "600" }}>Open Settings</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-
-          {/* v0.4 Shelter Card only when distance is real (not fallback) */}
-          {showShelterCard && (
-            <View style={{ borderWidth: 1, borderRadius: 12, padding: 16, marginTop: 10 }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                <Text style={{ fontSize: 18, fontWeight: "700" }}>Shelter Found</Text>
-                <TouchableOpacity onPress={resetHome}>
-                  <Text style={{ fontWeight: "600" }}>Start Over</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginTop: 8,
-                }}
-              >
-                <Text style={{ fontSize: 16, fontWeight: "600", flex: 1, paddingRight: 10 }}>
-                  {selectedShelter.name}
-                </Text>
-
-                {selectedShelter.verified && (
-                  <View
-                    style={{
-                      paddingVertical: 4,
-                      paddingHorizontal: 10,
-                      borderRadius: 999,
-                      borderWidth: 1,
-                      borderColor: "#1D9BF0",
-                      backgroundColor: "#E8F3FF",
-                    }}
-                  >
-                    <Text style={{ fontSize: 12, fontWeight: "700", color: "#1D9BF0" }}>
-                      Verified
-                    </Text>
-                  </View>
-                )}
-              </View>
-
-              <Text style={{ color: "#666" }}>
-                {selectedShelter.distanceMiles.toFixed(1)} miles away
-              </Text>
-
-              <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
-                <TouchableOpacity
-                  onPress={() => openMapsToDestination(selectedShelter)}
-                  style={{
-                    flex: 1,
-                    padding: 12,
-                    borderRadius: 10,
-                    backgroundColor: "#eee",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text style={{ fontWeight: "600" }}>Start Directions</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => {
-                    router.push({
-                      pathname: "/shelters",
-                      params: {
-                        lat: coords?.latitude?.toString() ?? "",
-                        lon: coords?.longitude?.toString() ?? "",
-                      },
-                    });
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: 12,
-                    borderRadius: 10,
-                    borderWidth: 1,
-                    borderColor: "#ddd",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text style={{ fontWeight: "600" }}>Other Shelters</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
-          <TouchableOpacity
-            onPress={offlineFallback}
-            style={{
-              padding: 14,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: "#ccc",
-              alignItems: "center",
-              marginTop: 10,
-            }}
-          >
-            <Text style={{ fontSize: 16, fontWeight: "500" }}>Resources & Hotlines</Text>
-          </TouchableOpacity>
+        <View style={styles.hero}>
+          <Text style={styles.heroEyebrow}>You are safe here</Text>
+          <Text style={styles.heroHeadline}>We believe you.</Text>
+          <Text style={styles.heroSub}>
+            Let us help you get the support you need.</Text>
+          <Text style={[styles.heroSub, { fontStyle: "italic" }]}>No judgement.</Text>
         </View>
-      </View>
 
-      {privacyCover && (
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "#fff",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 24,
-            zIndex: 9999,
-            elevation: 9999,
-          }}
+        <NoticeBanner
+          notice={notice}
+          onRetry={status === "error" ? requestLocation : undefined}
+          onOpenSettings={status === "denied" ? () => Linking.openSettings() : undefined}
+        />
+
+        {status === "requesting" ? (
+          <View style={styles.spinner}>
+            <ActivityIndicator size="large" color={C.primary} />
+            <Text style={styles.spinnerText}>Finding nearest shelter…</Text>
+          </View>
+        ) : !showCard ? (
+          <TouchableOpacity onPress={requestLocation} style={styles.ctaBtn} accessibilityLabel="Find help near me">
+            <View style={{ flex: 1 }}>
+              <Text style={styles.ctaLabel}>Find Help Now</Text>
+              <Text style={styles.ctaSub}>Uses your location once, not stored</Text>
+            </View>
+            <View style={styles.ctaArrow}>
+              <Text style={{ color: "#fff", fontSize: 22, lineHeight: 26 }}>→</Text>
+            </View>
+          </TouchableOpacity>
+        ) : null}
+
+        {showCard && selectedShelter && (
+          <ShelterCard
+            shelter={selectedShelter}
+            onDirections={() => openMaps(selectedShelter)}
+            onOtherShelters={() => router.push({ pathname: "/shelters", params: { lat: coords?.latitude?.toString() ?? "", lon: coords?.longitude?.toString() ?? "" } })}
+            onReset={resetHome}
+          />
+        )}
+
+        {!showCard && (
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+        )}
+
+        <TouchableOpacity
+          onPress={() => router.push("/(tabs)/explore")}
+          style={[styles.resourcesBtn, showCard && { marginTop: Spacing.lg }]}
+          accessibilityLabel="Resources and hotlines"
         >
-          <Text style={{ fontSize: 18, fontWeight: "700" }}>One moment…</Text>
-        </View>
-      )}
+          <View style={styles.resourcesLeft}>
+            <View style={styles.resourcesIcon}>
+              <Text style={{ fontSize: 18 }}>🔑</Text>
+            </View>
+            <View>
+              <Text style={styles.resourcesLabel}>Resources & Hotlines</Text>
+              <Text style={styles.resourcesSub}>Hotlines, safety planning, legal help</Text>
+            </View>
+          </View>
+          <Text style={{ color: C.textMuted, fontSize: 20 }}>›</Text>
+        </TouchableOpacity>
+
+      </ScrollView>
+      <PrivacyCover visible={privacyCover} />
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: C.background },
+  scroll: { paddingBottom: 100 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: Spacing.xxl, paddingTop: Platform.OS === 'android' ? Spacing.xxl : Spacing.lg, paddingBottom: Spacing.md },
+  appName: { fontFamily: "PlayfairDisplay_400Regular", fontSize: 20, color: C.textPrimary, letterSpacing: -0.3 },
+  quickExit: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 7, paddingHorizontal: 14, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: C.exitRed },
+  quickExitDot: { width: 7, height: 7, borderRadius: 99, backgroundColor: C.exitRed },
+  quickExitText: { fontFamily: "DMSans_600SemiBold", fontSize: 13, color: C.exitRed },
+  hero: { paddingHorizontal: Spacing.xxl, paddingTop: Spacing.sm, paddingBottom: Spacing.xl },
+  heroEyebrow: { fontFamily: "DMSans_500Medium", fontSize: 12, color: C.primary, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: Spacing.sm },
+  heroHeadline: { fontFamily: "PlayfairDisplay_400Regular", fontSize: 32, color: C.textPrimary, lineHeight: 38, letterSpacing: -0.5, marginBottom: Spacing.sm },
+  heroSub: { fontFamily: "DMSans_300Light", fontSize: 16, color: C.textSecondary, lineHeight: 24 },
+  notice: { flexDirection: "row", alignItems: "flex-start", gap: Spacing.sm, marginHorizontal: Spacing.xxl, marginBottom: Spacing.lg, padding: Spacing.md, borderRadius: Radius.md, borderWidth: 1 },
+  noticeWarn: { backgroundColor: "#FEF4F3", borderColor: "#F0BFBB" },
+  noticeInfo: { backgroundColor: "#EEF4FB", borderColor: "#C3D9EE" },
+  noticeDot: { width: 7, height: 7, borderRadius: 99, marginTop: 5, flexShrink: 0 },
+  noticeDotWarn: { backgroundColor: C.exitRed },
+  noticeDotInfo: { backgroundColor: C.verified },
+  noticeText: { fontFamily: "DMSans_400Regular", fontSize: 13, lineHeight: 19 },
+  noticeTextWarn: { color: "#8B2019" },
+  noticeTextInfo: { color: "#1A4A7A" },
+  noticeAction: { marginTop: Spacing.sm, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md, borderRadius: Radius.sm, backgroundColor: C.stone, alignSelf: "flex-start" },
+  noticeActionText: { fontFamily: "DMSans_600SemiBold", fontSize: 13, color: C.textPrimary },
+  ctaBtn: { marginHorizontal: Spacing.xxl, padding: Spacing.xl, backgroundColor: C.primary, borderRadius: Radius.lg, flexDirection: "row", justifyContent: "space-between", alignItems: "center", shadowColor: C.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.28, shadowRadius: 16, elevation: 8 },  ctaLabel: { fontFamily: "DMSans_600SemiBold", fontSize: 18, color: "#fff", letterSpacing: -0.2 },
+  ctaSub: { fontFamily: "DMSans_300Light", fontSize: 13, color: "rgba(255,255,255,0.72)", marginTop: 3 },
+  ctaArrow: { width: 42, height: 42, borderRadius: 21, backgroundColor: "rgba(255,255,255,0.26)", alignItems: "center", justifyContent: "center" },
+  spinner: { alignItems: "center", paddingVertical: 40 },
+  spinnerText: { fontFamily: "DMSans_400Regular", fontSize: 15, color: C.textSecondary, marginTop: Spacing.md },
+  shelterCard: { marginHorizontal: Spacing.xxl, backgroundColor: C.surface, borderRadius: Radius.lg, borderWidth: 1, borderColor: C.cardBorder, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 4, overflow: "hidden" },
+  cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", padding: Spacing.lg, paddingBottom: Spacing.md, borderBottomWidth: 1, borderBottomColor: C.stone, gap: Spacing.md },
+  cardFoundLabel: { fontFamily: "DMSans_600SemiBold", fontSize: 11, letterSpacing: 0.8, textTransform: "uppercase", color: C.primary, marginBottom: 4 },
+  cardName: { fontFamily: "PlayfairDisplay_400Regular", fontSize: 18, color: C.textPrimary, lineHeight: 24 },
+  verifiedBadge: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: Radius.pill, borderWidth: 1, borderColor: C.verified, backgroundColor: C.verifiedBg, flexShrink: 0 },
+  verifiedText: { fontFamily: "DMSans_600SemiBold", fontSize: 11, color: C.verified },
+  cardMeta: { flexDirection: "row", gap: Spacing.xl, padding: Spacing.md, paddingHorizontal: Spacing.lg, borderBottomWidth: 1, borderBottomColor: C.stone },
+  metaItem: { gap: 2 },
+  metaLabel: { fontFamily: "DMSans_500Medium", fontSize: 11, color: C.textMuted, textTransform: "uppercase", letterSpacing: 0.4 },
+  metaValue: { fontFamily: "DMSans_500Medium", fontSize: 14, color: C.textPrimary },
+  callWrap: { padding: Spacing.md, paddingHorizontal: Spacing.lg, borderBottomWidth: 1, borderBottomColor: C.stone },
+  callCard: { backgroundColor: C.callBg, borderRadius: Radius.md, borderWidth: 1, borderColor: C.callBorder, padding: Spacing.lg },
+  callIconRow: { flexDirection: "row", alignItems: "center", gap: Spacing.sm, marginBottom: Spacing.sm },
+  callIconBox: { width: 34, height: 34, borderRadius: 8, backgroundColor: C.callBorder, alignItems: "center", justifyContent: "center" },
+  callTitle: { fontFamily: "DMSans_600SemiBold", fontSize: 15, color: C.callText },
+  callNote: { fontFamily: "DMSans_300Light", fontSize: 13, color: C.callText, lineHeight: 19, marginBottom: Spacing.md },
+  callBtn: { padding: Spacing.md, borderRadius: Radius.sm, backgroundColor: C.callText, alignItems: "center" },
+  callBtnText: { fontFamily: "DMSans_600SemiBold", fontSize: 14, color: "#fff" },
+  cardActions: { flexDirection: "row", gap: Spacing.sm, padding: Spacing.md, paddingHorizontal: Spacing.lg },
+  btnPrimary: { flex: 1, paddingVertical: 13, borderRadius: Radius.sm, backgroundColor: C.primary, alignItems: "center" },
+  btnPrimaryText: { fontFamily: "DMSans_600SemiBold", fontSize: 14, color: "#fff" },
+  btnSecondary: { flex: 1, paddingVertical: 13, borderRadius: Radius.sm, backgroundColor: C.stone, alignItems: "center" },
+  btnSecondaryText: { fontFamily: "DMSans_500Medium", fontSize: 14, color: C.textSecondary },
+  resetRow: { alignItems: "flex-end", paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md },
+  resetText: { fontFamily: "DMSans_500Medium", fontSize: 12, color: C.textMuted },
+  divider: { flexDirection: "row", alignItems: "center", gap: Spacing.md, marginHorizontal: Spacing.xxl, marginVertical: Spacing.xl },
+  dividerLine: { flex: 1, height: 1, backgroundColor: C.cardBorder },
+  dividerText: { fontFamily: "DMSans_500Medium", fontSize: 12, color: C.textMuted, letterSpacing: 0.4 },
+  resourcesBtn: { marginHorizontal: Spacing.xxl, padding: Spacing.lg, backgroundColor: C.surface, borderWidth: 1, borderColor: C.cardBorder, borderRadius: Radius.md, flexDirection: "row", justifyContent: "space-between", alignItems: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  resourcesLeft: { flexDirection: "row", alignItems: "center", gap: Spacing.md },
+  resourcesIcon: { width: 36, height: 36, borderRadius: 8, backgroundColor: C.primaryLight, alignItems: "center", justifyContent: "center" },
+  resourcesLabel: { fontFamily: "DMSans_500Medium", fontSize: 15, color: C.textPrimary, marginBottom: 2 },
+  resourcesSub: { fontFamily: "DMSans_300Light", fontSize: 12, color: C.textMuted },
+});
