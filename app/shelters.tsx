@@ -43,7 +43,7 @@ export default function SheltersScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ lat?: string; lon?: string }>();
   const { privacyCover, setPrivacyCover } = usePrivacyCover();
-  const [thumbs, setThumbs] = useState<Record<string, "up" | "down" | null>>({});
+  const [reported, setReported] = useState<Record<string, boolean>>({});
 
   const shelters: Shelter[] = useMemo(() => {
     if (!Array.isArray(sheltersData)) return [];
@@ -96,14 +96,10 @@ export default function SheltersScreen() {
     }
   };
 
-  const setThumb = (id: string, val: "up" | "down") => {
-    setThumbs((prev) => ({ ...prev, [id]: prev[id] === val ? null : val }));
-  };
-
   const renderItem = ({ item }: { item: ShelterWithDist }) => {
     const callOnly = !canGetDirections(item);
     const phone = item.phone ?? item.hotline;
-    const thumb = thumbs[item.id] ?? null;
+    const hasReported = reported[item.id] ?? false;
 
     return (
       <View style={styles.card}>
@@ -164,26 +160,16 @@ export default function SheltersScreen() {
           )}
         </View>
 
-        {/* Feedback thumbs */}
-        <View style={styles.feedbackRow}>
-          <Text style={styles.feedbackLabel}>Was this helpful?</Text>
-          <View style={styles.feedbackBtns}>
-            <TouchableOpacity
-              onPress={() => setThumb(item.id, "up")}
-              style={[styles.thumbBtn, thumb === "up" && styles.thumbActive]}
-              accessibilityLabel="Helpful"
-            >
-              <Text style={[styles.thumbIcon, thumb === "up" && styles.thumbIconActive]}>👍</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setThumb(item.id, "down")}
-              style={[styles.thumbBtn, thumb === "down" && styles.thumbActiveDown]}
-              accessibilityLabel="Not helpful"
-            >
-              <Text style={[styles.thumbIcon, thumb === "down" && styles.thumbIconActive]}>👎</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        {/* Report issue */}
+        <TouchableOpacity
+          onPress={() => setReported(prev => ({ ...prev, [item.id]: true }))}
+          style={styles.reportRow}
+          accessibilityLabel="Report an issue with this listing"
+        >
+          <Text style={hasReported ? styles.reportedText : styles.reportLink}>
+            {hasReported ? "✓ Issue reported — thank you" : "Report an issue with this listing"}
+          </Text>
+        </TouchableOpacity>
       </View>
     );
   };
@@ -269,13 +255,8 @@ const styles = StyleSheet.create({
   callBtn: { padding: Spacing.sm + 2, borderRadius: Radius.sm, backgroundColor: C.callText, alignItems: "center" },
   callBtnText: { fontFamily: "DMSans_600SemiBold", fontSize: 13, color: "#fff" },
 
-  // Feedback
-  feedbackRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderTopWidth: 1, borderTopColor: C.stone },
-  feedbackLabel: { fontFamily: "DMSans_400Regular", fontSize: 12, color: C.textMuted },
-  feedbackBtns: { flexDirection: "row", gap: Spacing.sm },
-  thumbBtn: { width: 34, height: 34, borderRadius: Radius.sm, backgroundColor: C.stone, alignItems: "center", justifyContent: "center" },
-  thumbActive: { backgroundColor: C.primaryLight },
-  thumbActiveDown: { backgroundColor: "#FEF4F3" },
-  thumbIcon: { fontSize: 16 },
-  thumbIconActive: { opacity: 1 },
+  // Report
+  reportRow: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderTopWidth: 1, borderTopColor: C.stone, alignItems: "flex-start" },
+  reportLink: { fontFamily: "DMSans_300Light", fontSize: 11, color: C.textMuted, textDecorationLine: "underline" },
+  reportedText: { fontFamily: "DMSans_400Regular", fontSize: 11, color: C.primary },
 });

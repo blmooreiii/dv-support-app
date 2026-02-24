@@ -298,8 +298,8 @@ export default function HomeScreen() {
           <Text style={styles.heroEyebrow}>You are safe here</Text>
           <Text style={styles.heroHeadline}>We believe you.</Text>
           <Text style={styles.heroSub}>
-            Let us help you get the support you need.</Text>
-          <Text style={[styles.heroSub, { fontStyle: "italic" }]}>No judgement.</Text>
+            Let us help you get the support you need. No judgement.
+          </Text>
         </View>
 
         <NoticeBanner
@@ -320,7 +320,7 @@ export default function HomeScreen() {
               <Text style={styles.ctaSub}>Uses your location once, not stored</Text>
             </View>
             <View style={styles.ctaArrow}>
-              <Text style={{ color: "#fff", fontSize: 22, lineHeight: 26 }}>→</Text>
+              <View style={styles.ctaArrowIcon} />
             </View>
           </TouchableOpacity>
         ) : null}
@@ -391,6 +391,7 @@ const styles = StyleSheet.create({
   ctaBtn: { marginHorizontal: Spacing.xxl, padding: Spacing.xl, backgroundColor: C.primary, borderRadius: Radius.lg, flexDirection: "row", justifyContent: "space-between", alignItems: "center", shadowColor: C.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.28, shadowRadius: 16, elevation: 8 },  ctaLabel: { fontFamily: "DMSans_600SemiBold", fontSize: 18, color: "#fff", letterSpacing: -0.2 },
   ctaSub: { fontFamily: "DMSans_300Light", fontSize: 13, color: "rgba(255,255,255,0.72)", marginTop: 3 },
   ctaArrow: { width: 42, height: 42, borderRadius: 21, backgroundColor: "rgba(255,255,255,0.26)", alignItems: "center", justifyContent: "center" },
+  ctaArrowIcon: { width: 10, height: 10, borderTopWidth: 2, borderRightWidth: 2, borderColor: "#fff", transform: [{ rotate: "45deg" }, { translateX: -2 }] },
   spinner: { alignItems: "center", paddingVertical: 40 },
   spinnerText: { fontFamily: "DMSans_400Regular", fontSize: 15, color: C.textSecondary, marginTop: Spacing.md },
   shelterCard: { marginHorizontal: Spacing.xxl, backgroundColor: C.surface, borderRadius: Radius.lg, borderWidth: 1, borderColor: C.cardBorder, shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 4, overflow: "hidden" },
