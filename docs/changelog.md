@@ -1,5 +1,108 @@
 # DV Support App — Dev Changelog
 
+
+## February 24–27, 2026
+
+---
+
+### Onboarding Flow — M4 Feature Complete
+
+**Scope:** 2 screens, minimal and intentional. First launch only, replay from Settings.
+
+**Screen 1 — Privacy Promise** *(skippable)*
+- Lock icon, "Your privacy comes first." headline
+- Body copy: one-time location use, no storage, no account
+- Pills: No account · No history · No trace
+
+**Screen 2 — Quick Exit** *(mandatory)*
+- "The Quick Exit button is always there." headline
+- Explains immediate close + clears from recent apps
+- Live Quick Exit button demo
+- Caption: "It's at the top of the app screen. You don't have to look for it."
+
+**Files added/changed:**
+- `app/onboarding.tsx` — 2-screen component, fade transition (180ms/220ms)
+- `src/utils/useOnboarding.ts` — AsyncStorage hook, `shouldShow`, `complete()`, `reset()`
+- `app/(tabs)/index.tsx` — onboarding gate, all hooks moved above conditional returns
+
+**Bugs fixed during build:**
+- Rules of Hooks violation — early returns before hooks caused React error. All hooks moved to top of `HomeScreen`.
+- Exit icon rendering — border-drawn arrow rendered as `>` shape. Replaced with X mark (two rotated bars, `position: absolute`).
+- Caption orphan — "it." on its own line. Split into two even lines with `{'\n'}`.
+
+---
+
+### Android — Heart Icon Fix
+
+**Problem:** `IconSymbol` uses SF Symbols (iOS only). Heart icon missing on Android Support tab.
+
+**Fix:** Replaced `IconSymbol` with `MaterialIcons` from `@expo/vector-icons` (ships with Expo, no install needed).
+
+| Tab | Before | After |
+|-----|--------|-------|
+| Home | `house.fill` (SF Symbol) | `home` (MaterialIcons) |
+| Support | `heart.fill` (SF Symbol) | `favorite` (MaterialIcons) |
+
+**File:** `app/(tabs)/_layout.tsx`
+
+Android backlog fully closed. All 3 items resolved.
+
+---
+
+### Accessibility Audit — WCAG AA
+
+Full audit across all 4 screens. 5 issues identified and resolved.
+
+| Severity | Issue | Fix |
+|----------|-------|-----|
+| Critical | Touch targets too small | `minHeight: 44` on `backBtn`, `quickExit`, `reportRow` |
+| Critical | Missing `accessibilityRole` | `accessibilityRole="button"` on all 15 `TouchableOpacity` elements |
+| Moderate | `textMuted` contrast fails WCAG AA | `#9A9A9A` → `#767676` (2.85:1 → 4.54:1). One token change, fixes all screens. |
+| Moderate | `NoticeBanner` not announced to screen readers | `accessibilityLiveRegion="polite"` added |
+| Minor | Onboarding progress dots unlabeled | Wrapped in accessible `View` with label `"Step N of 2"` |
+
+**Files changed:** `constants/theme.ts`, `app/(tabs)/index.tsx`, `app/(tabs)/explore.tsx`, `app/shelters.tsx`, `app/onboarding.tsx`
+
+---
+
+### Product Brief — v0.1
+
+First formal product brief produced. 10 sections covering problem statement, positioning, target user, design principles, discretion design, distribution strategy, feature scope, SWOT, research basis, and open questions.
+
+**Key decisions locked:**
+- Internal positioning statement finalized
+- 4 principles locked: Trust Is the Product · Privacy Is Table Stakes · Discretion Over Visibility · Navigation Tool Only
+- Icon designed to resemble a casual game — in development with designer
+- Distribution is trust-routing only — no marketing, no ASO
+- Chat, accounts, and push notifications permanently out of scope
+
+**Research gap flagged:** No primary interviews with survivors, shelter workers, or advocates yet. Highest-priority gap before M4 launch decisions.
+
+---
+
+### SafeAreaView — API Level Testing Plan
+
+Physical Android device unavailable. Testing via lower API emulators.
+
+| API Level | Android Version | Status |
+|-----------|----------------|--------|
+| API 36 (Baklava) | Android 16 | ✓ Tested — no issues |
+| API 30 (R) | Android 11 | ⟳ Emulator created, testing in progress |
+| API 29 (Q) | Android 10 | ~ Planned |
+
+---
+
+### M4 Backlog Status
+
+| Item | Status |
+|------|--------|
+| Onboarding flow | ✓ Closed |
+| Android heart icon | ✓ Closed |
+| Accessibility audit | ✓ Closed |
+| SafeAreaView API testing | ⟳ In progress |
+| Dark mode implementation | ~ Waiting on UI/UX feedback |
+| Settings screen | ~ Unblocked — `reset()` hook ready, UI not built |
+
 ---
 
 ## Session — Android Polish & UI Exploration (2/23/26)

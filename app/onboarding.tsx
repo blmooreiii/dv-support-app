@@ -58,7 +58,11 @@ export default function OnboardingScreen({ onDone }: Props) {
       <View style={styles.container}>
 
         {/* ── Progress dots ── */}
-        <View style={styles.dotsRow}>
+        <View
+          style={styles.dotsRow}
+          accessible={true}
+          accessibilityLabel={`Step ${step + 1} of 2`}
+        >
           <View style={[styles.dot, step === 0 && styles.dotActive]} />
           <View style={[styles.dot, step === 1 && styles.dotActive]} />
         </View>

@@ -1,8 +1,9 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { Platform } from 'react-native';
 import { useFonts } from 'expo-font';
 import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Colors, FONT_MAP } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -25,7 +26,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+            <MaterialIcons name="home" size={28} color={color} />
           ),
         }}
       />
@@ -34,7 +35,7 @@ export default function TabLayout() {
         options={{
           title: 'Support',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="heart.fill" color={color} />
+            <MaterialIcons name="favorite" size={28} color={color} />
           ),
         }}
       />

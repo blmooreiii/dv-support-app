@@ -144,6 +144,7 @@ export default function SheltersScreen() {
                   onPress={() => Linking.openURL(`tel:${phone.replace(/\D/g, "")}`)}
                   style={styles.callBtn}
                   accessibilityLabel={`Call ${phone}`}
+                  accessibilityRole="button"
                 >
                   <Text style={styles.callBtnText}>{phone}</Text>
                 </TouchableOpacity>
@@ -154,6 +155,7 @@ export default function SheltersScreen() {
               onPress={() => openMaps(item)}
               style={styles.directionsBtn}
               accessibilityLabel={`Get directions to ${item.name}`}
+              accessibilityRole="button"
             >
               <Text style={styles.directionsBtnText}>Directions</Text>
             </TouchableOpacity>
@@ -165,6 +167,7 @@ export default function SheltersScreen() {
           onPress={() => setReported(prev => ({ ...prev, [item.id]: true }))}
           style={styles.reportRow}
           accessibilityLabel="Report an issue with this listing"
+          accessibilityRole="button"
         >
           <Text style={hasReported ? styles.reportedText : styles.reportLink}>
             {hasReported ? "✓ Issue reported — thank you" : "Report an issue with this listing"}
@@ -179,12 +182,13 @@ export default function SheltersScreen() {
       <Stack.Screen options={{ headerShown: false }} />
 
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} accessibilityLabel="Go back">
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} accessibilityLabel="Go back" accessibilityRole="button">
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => quickExit(setPrivacyCover)}
           accessibilityLabel="Quick Exit"
+          accessibilityRole="button"
           style={styles.quickExit}
         >
           <View style={styles.quickExitDot} />
@@ -214,9 +218,9 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.background },
 
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: Spacing.xxl, paddingTop: Platform.OS === 'android' ? Spacing.xxl : Spacing.lg, paddingBottom: Spacing.md },
-  backBtn: { paddingVertical: 6 },
+  backBtn: { paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
   backText: { fontFamily: "DMSans_600SemiBold", fontSize: 15, color: C.primary },
-  quickExit: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 7, paddingHorizontal: 14, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: C.exitRed },
+  quickExit: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 7, paddingHorizontal: 14, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: C.exitRed, minHeight: 44 },
   quickExitDot: { width: 7, height: 7, borderRadius: 99, backgroundColor: C.exitRed },
   quickExitText: { fontFamily: "DMSans_600SemiBold", fontSize: 13, color: C.exitRed },
 
@@ -256,7 +260,7 @@ const styles = StyleSheet.create({
   callBtnText: { fontFamily: "DMSans_600SemiBold", fontSize: 13, color: "#fff" },
 
   // Report
-  reportRow: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderTopWidth: 1, borderTopColor: C.stone, alignItems: "flex-start" },
+  reportRow: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderTopWidth: 1, borderTopColor: C.stone, alignItems: "flex-start", minHeight: 44, justifyContent: 'center' },
   reportLink: { fontFamily: "DMSans_300Light", fontSize: 11, color: C.textMuted, textDecorationLine: "underline" },
   reportedText: { fontFamily: "DMSans_400Regular", fontSize: 11, color: C.primary },
 });

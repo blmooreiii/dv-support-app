@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import {
   Alert,
   Linking,
-  SafeAreaView,
+
   ScrollView,
   StyleSheet,
   Text,
@@ -12,6 +12,9 @@ import {
 import { quickExit } from "@/src/utils/quickExit";
 import { PrivacyCover, usePrivacyCover } from "@/components/PrivacyCover";
 import { Colors, Spacing, Radius } from "@/constants/theme";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Platform } from "react-native";
+import { IconSymbol } from '@/components/ui/icon-symbol';
 
 const C = Colors.light;
 
@@ -126,6 +129,7 @@ function HotlineCard({ hotline }: { hotline: typeof HOTLINES[0] }) {
           onPress={() => Linking.openURL(`tel:${hotline.number!.replace(/\D/g, "")}`)}
           style={styles.hotlineCallBtn}
           accessibilityLabel={`Call ${hotline.name}`}
+          accessibilityRole="button"
         >
           <Text style={styles.hotlineCallText}>{hotline.number}</Text>
         </TouchableOpacity>
@@ -136,7 +140,7 @@ function HotlineCard({ hotline }: { hotline: typeof HOTLINES[0] }) {
 
 function ResourceRow({ item }: { item: ResourceItem }) {
   return (
-    <TouchableOpacity onPress={item.action} style={styles.resourceRow} accessibilityLabel={item.title}>
+    <TouchableOpacity onPress={item.action} style={styles.resourceRow} accessibilityLabel={item.title} accessibilityRole="button">
       <View style={[styles.resourceIcon, { backgroundColor: item.iconBg }]}>
         <Text style={{ fontSize: 18 }}>{item.icon}</Text>
       </View>
@@ -156,7 +160,7 @@ export default function SupportScreen() {
   const [hotlinesExpanded, setHotlinesExpanded] = useState(true);
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* Header */}
@@ -165,6 +169,7 @@ export default function SupportScreen() {
           <TouchableOpacity
             onPress={() => quickExit(setPrivacyCover)}
             accessibilityLabel="Quick Exit"
+            accessibilityRole="button"
             style={styles.quickExit}
           >
             <View style={styles.quickExitDot} />
@@ -185,6 +190,8 @@ export default function SupportScreen() {
           onPress={() => setHotlinesExpanded((v) => !v)}
           style={styles.sectionHeader}
           accessibilityLabel={hotlinesExpanded ? "Collapse hotlines" : "Expand hotlines"}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: hotlinesExpanded }}
         >
           <View style={styles.sectionHeaderLeft}>
             <View style={[styles.sectionIcon, { backgroundColor: "#FEF3F2" }]}>
@@ -229,7 +236,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.background },
   scroll: { paddingBottom: 100 },
 
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: Spacing.xxl, paddingTop: Spacing.lg, paddingBottom: Spacing.md },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: Spacing.xxl, paddingTop: Platform.OS === 'android' ? Spacing.xxl : Spacing.lg, paddingBottom: Spacing.md },
   appName: { fontFamily: "PlayfairDisplay_400Regular", fontSize: 20, color: C.textPrimary, letterSpacing: -0.3 },
   quickExit: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 7, paddingHorizontal: 14, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: C.exitRed },
   quickExitDot: { width: 7, height: 7, borderRadius: 99, backgroundColor: C.exitRed },

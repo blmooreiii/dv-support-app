@@ -62,7 +62,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number) {
 
 function QuickExitButton({ onPress }: { onPress: () => void }) {
   return (
-    <TouchableOpacity onPress={onPress} accessibilityLabel="Quick Exit" style={styles.quickExit}>
+    <TouchableOpacity onPress={onPress} accessibilityLabel="Quick Exit" accessibilityRole="button" style={styles.quickExit}>
       <View style={styles.quickExitDot} />
       <Text style={styles.quickExitText}>Quick Exit</Text>
     </TouchableOpacity>
@@ -77,19 +77,24 @@ function NoticeBanner({ notice, onRetry, onOpenSettings }: {
   if (notice.kind === "none") return null;
   const warn = notice.kind === "warning";
   return (
-    <View style={[styles.notice, warn ? styles.noticeWarn : styles.noticeInfo]}>
+    <View
+      style={[styles.notice, warn ? styles.noticeWarn : styles.noticeInfo]}
+      accessible={true}
+      accessibilityLiveRegion="polite"
+      accessibilityLabel={notice.message}
+    >
       <View style={[styles.noticeDot, warn ? styles.noticeDotWarn : styles.noticeDotInfo]} />
       <View style={{ flex: 1 }}>
         <Text style={[styles.noticeText, warn ? styles.noticeTextWarn : styles.noticeTextInfo]}>
           {notice.message}
         </Text>
         {onOpenSettings && (
-          <TouchableOpacity onPress={onOpenSettings} style={styles.noticeAction}>
+          <TouchableOpacity onPress={onOpenSettings} accessibilityRole="button" accessibilityLabel="Open Settings" style={styles.noticeAction}>
             <Text style={styles.noticeActionText}>Open Settings</Text>
           </TouchableOpacity>
         )}
         {onRetry && (
-          <TouchableOpacity onPress={onRetry} style={styles.noticeAction}>
+          <TouchableOpacity onPress={onRetry} accessibilityRole="button" accessibilityLabel="Retry" style={styles.noticeAction}>
             <Text style={styles.noticeActionText}>Retry</Text>
           </TouchableOpacity>
         )}
@@ -150,6 +155,7 @@ function ShelterCard({ shelter, onDirections, onOtherShelters, onReset }: {
                 onPress={() => Linking.openURL(`tel:${phone.replace(/\D/g, "")}`)}
                 style={styles.callBtn}
                 accessibilityLabel={`Call ${phone}`}
+                accessibilityRole="button"
               >
                 <Text style={styles.callBtnText}>{phone}</Text>
               </TouchableOpacity>
@@ -160,19 +166,21 @@ function ShelterCard({ shelter, onDirections, onOtherShelters, onReset }: {
 
       <View style={styles.cardActions}>
         {!callOnly && (
-          <TouchableOpacity onPress={onDirections} style={styles.btnPrimary}>
+          <TouchableOpacity onPress={onDirections} accessibilityRole="button" accessibilityLabel="Start directions" style={styles.btnPrimary}>
             <Text style={styles.btnPrimaryText}>Start Directions</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity
           onPress={onOtherShelters}
+          accessibilityRole="button"
+          accessibilityLabel="View other shelters"
           style={[styles.btnSecondary, callOnly && { flex: 1 }]}
         >
           <Text style={styles.btnSecondaryText}>Other Shelters</Text>
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity onPress={onReset} style={styles.resetRow}>
+      <TouchableOpacity onPress={onReset} accessibilityRole="button" accessibilityLabel="Start over" style={styles.resetRow}>
         <Text style={styles.resetText}>Start Over</Text>
       </TouchableOpacity>
     </View>
@@ -322,7 +330,7 @@ export default function HomeScreen() {
             <Text style={styles.spinnerText}>Finding nearest shelter…</Text>
           </View>
         ) : !showCard ? (
-          <TouchableOpacity onPress={requestLocation} style={styles.ctaBtn} accessibilityLabel="Find help near me">
+          <TouchableOpacity onPress={requestLocation} style={styles.ctaBtn} accessibilityLabel="Find help near me" accessibilityRole="button">
             <View style={{ flex: 1 }}>
               <Text style={styles.ctaLabel}>Find Help Now</Text>
               <Text style={styles.ctaSub}>Uses your location once, not stored</Text>
@@ -354,6 +362,7 @@ export default function HomeScreen() {
           onPress={() => router.push("/(tabs)/explore")}
           style={[styles.resourcesBtn, showCard && { marginTop: Spacing.lg }]}
           accessibilityLabel="Resources and hotlines"
+          accessibilityRole="button"
         >
           <View style={styles.resourcesLeft}>
             <View style={styles.resourcesIcon}>
@@ -378,7 +387,7 @@ const styles = StyleSheet.create({
   scroll: { paddingBottom: 100 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: Spacing.xxl, paddingTop: Platform.OS === 'android' ? Spacing.xxl : Spacing.lg, paddingBottom: Spacing.md },
   appName: { fontFamily: "PlayfairDisplay_400Regular", fontSize: 20, color: C.textPrimary, letterSpacing: -0.3 },
-  quickExit: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 7, paddingHorizontal: 14, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: C.exitRed },
+  quickExit: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 7, paddingHorizontal: 14, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: C.exitRed, minHeight: 44 },
   quickExitDot: { width: 7, height: 7, borderRadius: 99, backgroundColor: C.exitRed },
   quickExitText: { fontFamily: "DMSans_600SemiBold", fontSize: 13, color: C.exitRed },
   hero: { paddingHorizontal: Spacing.xxl, paddingTop: Spacing.sm, paddingBottom: Spacing.xl },

@@ -25,7 +25,7 @@ export const Colors = {
     // Text
     textPrimary:    '#1A1A1A', // Near-black — headlines, primary text
     textSecondary:  '#5A5A5A', // Mid-gray — supporting text
-    textMuted:      '#9A9A9A', // Light gray — metadata, placeholders, labels
+    textMuted:      '#767676', // Light gray — metadata, placeholders, labels — WCAG AA on #FAFAF8
 
     // Semantic
     exitRed:        '#B03A2E', // Quick Exit — used ONLY for the exit button
