@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from "react";
+import OnboardingScreen from "@/app/onboarding";
+import { useOnboarding } from "@/src/utils/useOnboarding";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   ActivityIndicator,
@@ -180,7 +182,9 @@ function ShelterCard({ shelter, onDirections, onOtherShelters, onReset }: {
 export default function HomeScreen() {
   const router = useRouter();
   const { privacyCover, setPrivacyCover } = usePrivacyCover();
+  const { shouldShow, complete } = useOnboarding();
 
+  // All hooks must be declared before any conditional returns
   const shelters: Shelter[] = useMemo(() => {
     const flattened = (sheltersData as any)?.flat?.() ?? [];
     return validateSheltersRuntime(flattened);
@@ -284,6 +288,10 @@ export default function HomeScreen() {
   });
 
   const showCard = status === "granted" && selectedShelter && isValid(selectedShelter.distanceMiles);
+
+  // ── Conditional renders AFTER all hooks ──
+  if (shouldShow === null) return null;
+  if (shouldShow) return <OnboardingScreen onDone={complete} />;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
