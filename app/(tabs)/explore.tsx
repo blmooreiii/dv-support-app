@@ -2,13 +2,13 @@ import React, { useState } from "react";
 import {
   Alert,
   Linking,
-
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { quickExit } from "@/src/utils/quickExit";
 import { PrivacyCover, usePrivacyCover } from "@/components/PrivacyCover";
 import { Colors, Spacing, Radius } from "@/constants/theme";
@@ -158,6 +158,7 @@ function ResourceRow({ item }: { item: ResourceItem }) {
 export default function SupportScreen() {
   const { privacyCover, setPrivacyCover } = usePrivacyCover();
   const [hotlinesExpanded, setHotlinesExpanded] = useState(true);
+  const router = useRouter();
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -225,6 +226,16 @@ export default function SupportScreen() {
           TheHotline.org · WomensLaw.org · TechSafety.org · NNEDV.org
         </Text>
 
+        {/* Settings link */}
+        <TouchableOpacity
+          onPress={() => router.push('/settings')}
+          style={styles.settingsLink}
+          accessibilityLabel="Open settings"
+          accessibilityRole="button"
+        >
+          <Text style={styles.settingsLinkText}>Settings</Text>
+        </TouchableOpacity>
+
       </ScrollView>
 
       <PrivacyCover visible={privacyCover} />
@@ -275,4 +286,7 @@ const styles = StyleSheet.create({
   resourceChevron: { fontFamily: "DMSans_400Regular", fontSize: 20, color: C.textMuted },
 
   sources: { textAlign: "center", fontFamily: "DMSans_300Light", fontSize: 11, color: C.textMuted, marginTop: Spacing.xl, marginHorizontal: Spacing.xxl, lineHeight: 18 },
+
+  settingsLink: { alignItems: "center", paddingVertical: Spacing.lg, minHeight: 44, justifyContent: 'center' },
+  settingsLinkText: { fontFamily: "DMSans_400Regular", fontSize: 13, color: C.textMuted, textDecorationLine: 'underline' },
 });
