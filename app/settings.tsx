@@ -82,7 +82,7 @@ export default function SettingsScreen() {
   };
 
   const handlePrivacyStatement = () => {
-    Linking.openURL('https://bastet.app/privacy').catch(() => {});
+    Linking.openURL('https://sites.google.com/view/bastet-privacy/').catch(() => {});
   };
 
   return (
