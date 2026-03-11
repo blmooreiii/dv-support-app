@@ -14,7 +14,6 @@ import { PrivacyCover, usePrivacyCover } from "@/components/PrivacyCover";
 import { Colors, Spacing, Radius } from "@/constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Platform } from "react-native";
-import { IconSymbol } from '@/components/ui/icon-symbol';
 
 const C = Colors.light;
 
@@ -162,9 +161,9 @@ export default function SupportScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        {/* Header */}
+      {/* ── Sticky header — always visible, never scrolls away ── */}
+      <View style={styles.stickyTop}>
         <View style={styles.header}>
           <Text style={styles.appName}>Bastet</Text>
           <TouchableOpacity
@@ -178,13 +177,15 @@ export default function SupportScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Page title */}
         <View style={styles.titleBlock}>
           <Text style={styles.headline}>Support</Text>
           <Text style={styles.subhead}>
             Browse when it's safe. Exit anytime.
           </Text>
         </View>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* ── Hotlines section ── */}
         <TouchableOpacity
@@ -253,7 +254,8 @@ const styles = StyleSheet.create({
   quickExitDot: { width: 7, height: 7, borderRadius: 99, backgroundColor: C.exitRed },
   quickExitText: { fontFamily: "DMSans_600SemiBold", fontSize: 13, color: C.exitRed },
 
-  titleBlock: { paddingHorizontal: Spacing.xxl, paddingBottom: Spacing.xl },
+  stickyTop: { backgroundColor: C.background, borderBottomWidth: 1, borderBottomColor: C.cardBorder, paddingBottom: Spacing.md },
+  titleBlock: { paddingHorizontal: Spacing.xxl, paddingTop: Spacing.xs, paddingBottom: Spacing.sm },
   headline: { fontFamily: "PlayfairDisplay_400Regular", fontSize: 28, color: C.textPrimary, letterSpacing: -0.4, marginBottom: 4 },
   subhead: { fontFamily: "DMSans_300Light", fontSize: 14, color: C.textMuted, lineHeight: 20 },
 

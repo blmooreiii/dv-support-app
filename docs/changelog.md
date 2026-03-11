@@ -1,5 +1,97 @@
 # DV Support App — Dev Changelog
 
+March 6, 2026 — Session 2
+Logo Review — Final Direction
+Reviewed four logo variations from designer (pixel version, vector on white, vector on dark, shield seal).
+Selected direction:
+
+Pixel/16-bit version → app icon only (disguise layer on home screen)
+"Bastet" wordmark in Playfair Display → inside the app, no logo in header
+Logo does not appear inside the app at all — text-only header preserves discretion
+
+Rationale: The detailed Egyptian mark inside the app risks breaking the disguise. The serif wordmark reads as a game title. Clean separation of purpose — icon does the disguise job, wordmark holds the in-app identity.
+Next step: Designer to export pixel version at App Store icon sizes — 1024px, 512px, 180px, 32px.
+
+Beta Test Plan — v1.0
+First formal beta test plan produced. PDF artifact filed as Bastet_Beta_Test_Plan.pdf.
+8 sections:
+
+Overview and beta goals (Tier 1 + Tier 2)
+Tester profiles — Tier 1 (5–8 advocates/familiar contacts), Tier 2 (15–25 trusted network)
+Current Tier 1 pipeline — 3 advocates (callbacks pending), 2 familiar contacts (ready to invite)
+Distribution — TestFlight (iOS, email invite only for Tier 1), Google Play Internal Testing (Android)
+Feedback collection — Tier 1 structured conversation with 5 core questions, Tier 2 Google Form
+What to watch for — safety-critical, data trust, UX clarity, technical
+Timeline — pre-beta through App Store submission
+Post-beta backlog — sorting/filtering, icons, dark mode, anonymous feedback, national scaling
+
+Key decisions:
+
+Tier 1 runs before Tier 2 — advocate feedback shapes whether anything changes first
+Tier 1 invite by email only — no public TestFlight link, consistent with discretion principle
+Feedback collected via real conversation for Tier 1, short Google Form for Tier 2
+
+
+Backlog Updates
+ItemStatusNotesLogo direction✓ ClosedPixel version for app icon, wordmark inside appBeta test plan✓ ClosedPDF filedApp icon exports⏳ WaitingDesigner delivering 1024px, 512px, 180px, 32pxAdvocate callbacks⏳ Waiting3 in pipelinePM feedback⏳ WaitingNotes expected
+March 6, 2026
+UI/UX Feedback — Resolved
+Received feedback from UI/UX specialist. All items addressed or formally triaged.
+FeedbackDecisionSticky Quick Exit header on scrollable screens✓ Implemented — see belowIcons for distance/city/pet friendly on shelter cards~ Backlogged — not a blockerContrast accessibility check✓ Already resolved in M4 WCAG AA auditSorting/filtering on Shelters screen~ Post-beta — pending Tier 1 advocate feedback
+Sticky Header — Shelters & Support Screens
+Problem: Quick Exit button scrolled out of view on both scrollable screens. User could be mid-scroll with no one-tap exit available.
+Fix: Pulled header and page title outside ScrollView/FlatList on both screens. Header is now fixed at the top regardless of scroll position. Added borderBottomWidth: 1 with C.cardBorder as a visual separator as content scrolls beneath.
+Files changed:
+app/shelters.tsx — header + pageTitle wrapped in stickyTop View above FlatList
+app/(tabs)/explore.tsx — header + titleBlock wrapped in stickyTop View above ScrollView
+Also cleaned up in explore.tsx:
+Removed dead IconSymbol import — leftover from pre-M4 MaterialIcons swap, never used
+Bug Fix — Permission Denied shows no shelter path (iOS)
+Problem: When location permission is denied on iOS, the app showed the notice banner and Resources & Hotlines button but no path to the shelter list. User was effectively stuck.
+Root cause: status === "denied" fell through to !showCard which rendered the "Find Help Now" CTA — not useful when permission is already denied.
+Fix: Added a status === "denied" intercept before the !showCard check. Renders a "Browse All Shelters" CTA instead, routing to /shelters with empty lat/lon params. Shelters screen already handles missing coords gracefully — sorts alphabetically.
+File changed: app/(tabs)/index.tsx
+Tested: ✓ Passed on iOS simulator
+Edge Case Testing — iOS Simulator
+Full test run completed on iOS simulator. Results:
+TestResultNotesPermission denied✓ Fixed + passedBug fixed this sessionLocation services off✓ PassedGPS timeout⏭ DeferredNeeds physical deviceLast known location stale⏭ DeferredNeeds physical deviceQuick Exit — every screen✓ PassedHome, Support, Shelters, Settings, OnboardingQuick Exit — mid-action✓ PassedNo ghost state on reopenQuick Exit — rapid taps✓ PassedNo duplicate browser tabsNo internet⏭ DeferredNeeds physical deviceValidator log — 21/21✓ PassedNo data regressionsLow battery mode⏭ DeferredNeeds physical deviceOnboarding replay from Settings✓ PassedApp backgrounded mid-onboarding⏭ DeferredNeeds physical deviceLarge text accessibility⏭ DeferredNeeds physical device
+Deferred items to be surfaced naturally by Tier 1 beta testers on physical devices.
+Privacy Statement — Live
+Privacy policy written and hosted at https://sites.google.com/view/bastet-privacy/. URL confirmed loading. App Store Connect ready.
+settings.tsx already pointing to live URL — no code change required.
+Age threshold note: Current children's section references "under 13." Should be updated to explicitly state app is intended for adults 18+ before App Store submission.
+Backlog Updates
+ItemStatusNotesSticky header — Shelters✓ ClosedSticky header — Support✓ ClosedPermission denied — no shelter path✓ ClosedDead IconSymbol import (explore.tsx)✓ ClosedPrivacy statement URL✓ ClosedLive at Google Sites URLIcons for distance/city on shelter cards~ BackloggedPost-beta, non-blockingSorting/filtering on Shelters screen~ BackloggedPost-beta, after advocate feedbackAPI 29 (Android 10) emulator test~ OpenStill pendingDark mode~ OpenUI/UX feedback pending — will ship without if no responseApp icon~ OpenDesigner working from creative brief v1.1App Store prep~ OpenScreenshots, description, privacy URL
+Pre-Beta Status
+ItemStatusM4 complete✓Privacy statement live✓Edge case testing (simulator)✓Sticky headers✓Permission denied fix✓Advocate outreach⏳ Waiting on callbacksPM feedback⏳ Waiting on notesApp icon assets⏳ Waiting on designerAPI 29 emulator test~ Pending
+
+
+## February 28, 2026
+
+SafeAreaView — API 30 Testing
+Tested on Android API 30 (Android 11) emulator. All screens pass.
+ScreenResultHome — header and Quick Exit✓ Fully visible, no clippingSupport tab✓ Clean, tab color change on active workingQuick Exit✓ Closes app, opens Chrome on Android as expectedOnboarding✓ Progress dots and content not clipped
+SafeAreaView backlog item closed. No fixes required.
+
+Settings Screen
+New screen accessible from Support tab via "Settings" text link at the bottom.
+Contents:
+SectionItemBehaviorPrivacy & SafetyReplay Privacy IntroductionCalls useOnboarding.reset(), navigates to /AboutPrivacy StatementOpens bastet.app/privacy — placeholder, URL pendingAboutApp VersionStatic display, 0.4.0 (M4), no chevron
+Footer copy: "Bastet collects no personal data. No account. No history. No trace."
+Files added/changed:
+
+app/settings.tsx — new screen, Quick Exit and SafeAreaView included
+app/(tabs)/explore.tsx — Settings text link added below sources footer, useRouter wired in
+
+Accessibility: All rows minHeight: 56, back button minHeight: 44, Quick Exit minHeight: 44, all interactive elements have accessibilityRole="button".
+
+Backlog Updates
+ItemStatusNotesSafeAreaView API 30✓ ClosedPasses on API 30 emulatorSettings screen✓ ClosedReplay onboarding, privacy statement, app versionPrivacy statement URL~ OpenNeeded before App Store submission. Placeholder currently points to bastet.app/privacyData feedback mechanism~ BackloggedHow to get anonymous shelter accuracy signal without violating privacy principle. Needs advocate input before deciding.Dark mode~ OpenWaiting on UI/UX specialist feedbackApp icon~ OpenIn progress with designer. Creative brief v1.1 filed.App Store prep~ OpenScreenshots, description, privacy policy URL
+
+M4 Status — Complete
+ItemStatusOnboarding flow✓ ClosedAndroid heart icon✓ ClosedAccessibility audit — WCAG AA✓ ClosedSafeAreaView API 30 testing✓ ClosedSettings screen✓ Closed
+M4 is complete. Pre-beta work begins next milestone.
+
 
 ## February 24–27, 2026
 

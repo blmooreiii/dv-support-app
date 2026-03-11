@@ -329,6 +329,22 @@ export default function HomeScreen() {
             <ActivityIndicator size="large" color={C.primary} />
             <Text style={styles.spinnerText}>Finding nearest shelter…</Text>
           </View>
+        ) : status === "denied" ? (
+          // Location denied — show Browse All Shelters so user isn't stuck
+          <TouchableOpacity
+            onPress={() => router.push({ pathname: "/shelters", params: { lat: "", lon: "" } })}
+            style={styles.ctaBtn}
+            accessibilityLabel="Browse all shelters"
+            accessibilityRole="button"
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.ctaLabel}>Browse All Shelters</Text>
+              <Text style={styles.ctaSub}>Sorted alphabetically without location</Text>
+            </View>
+            <View style={styles.ctaArrow}>
+              <View style={styles.ctaArrowIcon} />
+            </View>
+          </TouchableOpacity>
         ) : !showCard ? (
           <TouchableOpacity onPress={requestLocation} style={styles.ctaBtn} accessibilityLabel="Find help near me" accessibilityRole="button">
             <View style={{ flex: 1 }}>
