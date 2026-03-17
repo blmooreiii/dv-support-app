@@ -1,20 +1,22 @@
 [
   {
-    "id": "sc-charleston-mysiste-001",
-    "name": "My Sister's House",
-    "city": "Charleston",
-    "state": "SC",
-    "address": "1820 Reynolds Ave, North Charleston, SC 29405",
-    "latitude": 32.8797,
-    "longitude": -79.9903,
-    "phone": "(843) 744-3242",
-    "hotline": null,
-    "hasPetOptions": false,
-    "website": "https://www.mysistershouse.org",
-    "contactPreference": "website",
-    "verified": true,
-    "lastVerified": "2026-02-21",
-    "source": "https://www.mysistershouse.org"
+  "id": "my-sisters-house",
+  "name": "My Sister's House",
+  "city": "Charleston",
+  "state": "SC",
+  "phone": "800-273-4673",
+  "hotline": "(843) 744-3242",
+  "callForAddress": true,
+  "callForAddressNote": "My Sister's House no longer operates a physical shelter. They help connect survivors with available placement — including hotels and alternative housing. Call to find options near you.",
+  "coordinates": {
+    "lat": 32.7765,
+    "lng": -79.9311
+  },
+  "verified": true,
+  "lastVerified": "2026-03-16",
+  "source": "Advocate feedback — Dr. Zakevia Lewis-Kendrick, March 16 2026",
+  "hasPetOptions": false,
+  "attributes": []
   },
   {
     "id": "sc-columbia-sisterca-001",
