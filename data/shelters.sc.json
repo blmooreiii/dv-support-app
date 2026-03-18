@@ -1,22 +1,22 @@
 [
   {
-  "id": "my-sisters-house",
-  "name": "My Sister's House",
-  "city": "Charleston",
-  "state": "SC",
-  "phone": "800-273-4673",
-  "hotline": "(843) 744-3242",
-  "callForAddress": true,
-  "callForAddressNote": "My Sister's House no longer operates a physical shelter. They help connect survivors with available placement — including hotels and alternative housing. Call to find options near you.",
-  "coordinates": {
-    "lat": 32.7765,
-    "lng": -79.9311
-  },
-  "verified": true,
-  "lastVerified": "2026-03-16",
-  "source": "Advocate feedback — Dr. Zakevia Lewis-Kendrick, March 16 2026",
-  "hasPetOptions": false,
-  "attributes": []
+    "id": "my-sisters-house",
+    "name": "My Sister's House",
+    "city": "Charleston",
+    "state": "SC",
+    "address": "Charleston, SC",
+    "latitude": 32.7765,
+    "longitude": -79.9311,
+    "phone": "(843) 744-3242",
+    "hotline": "(843) 744-3242",
+    "hasPetOptions": false,
+    "website": null,
+    "contactPreference": "phone",
+    "verified": true,
+    "lastVerified": "2026-03-16",
+    "source": "Advocate feedback — Dr. Zakevia Lewis-Kendrick, March 16 2026",
+    "callForAddress": true,
+    "callForAddressNote": "My Sister's House no longer operates a physical shelter. They help connect survivors with available placement — including hotels and alternative housing. Call to find options near you."
   },
   {
     "id": "sc-columbia-sisterca-001",
@@ -361,6 +361,25 @@
     "verified": true,
     "lastVerified": "2026-02-21",
     "source": "verified-shelter-list-2026-02-21",
+    "callForAddress": true,
+    "callForAddressNote": "Address is kept confidential for resident safety. Call to arrange access."
+  },
+  {
+    "id": "sc-hanahan-palmetto-001",
+    "name": "Palmetto Hope Network",
+    "city": "Hanahan",
+    "state": "SC",
+    "address": "Hanahan, SC",
+    "latitude": 32.9182,
+    "longitude": -80.002,
+    "phone": "(843) 904-2592",
+    "hotline": "(843) 904-2592",
+    "hasPetOptions": false,
+    "website": null,
+    "contactPreference": "phone",
+    "verified": true,
+    "lastVerified": "2026-03-17",
+    "source": "Advocate verification — Dr. Zakevia Lewis-Kendrick, March 16 2026",
     "callForAddress": true,
     "callForAddressNote": "Address is kept confidential for resident safety. Call to arrange access."
   }
