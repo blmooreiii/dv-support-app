@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shelter Portal — Bastet</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--ep:#4A1942;--gold:#C9A84C;--gold-light:#fdf8ee;--cream:#FAF7F2;--dark:#1A1A1A;--mid:#666666;--lb:#E8E2D9;--lbg:#F5F2EE;--sbg:#EEF7EE;--sbd:#2D7D2D;--stx:#2D7D2D}
+body{background:var(--cream);color:var(--dark);font-family:'DM Sans',sans-serif;font-weight:300;line-height:1.6;min-height:100vh}
+.top-rule{height:3px;background:linear-gradient(90deg,var(--ep) 0%,var(--gold) 100%)}
+nav{padding:18px 48px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--lb)}
+.nav-brand{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:400;letter-spacing:.08em;color:var(--ep);text-transform:uppercase}
+.nav-tag{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mid)}
+.page-wrap{max-width:760px;margin:0 auto;padding:56px 24px 80px}
+.gold-rule{width:48px;height:2px;background:var(--gold);margin-bottom:16px}
+.page-header{margin-bottom:48px}
+.page-header h1{font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;color:var(--ep);line-height:1.1;margin-bottom:12px}
+.page-header p{font-size:15px;color:var(--mid);line-height:1.7;max-width:560px}
+.tab-nav{display:flex;border-bottom:1px solid var(--lb);margin-bottom:40px}
+.tab-btn{padding:12px 24px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:300;color:var(--mid);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;letter-spacing:.02em}
+.tab-btn.active{color:var(--ep);border-bottom-color:var(--ep);font-weight:500}
+.tab-btn:hover:not(.active){color:var(--dark)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.list-controls{display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.county-select{padding:9px 36px 9px 12px;border:1px solid var(--lb);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:300;color:var(--dark);background:white;appearance:none;-webkit-appearance:none;cursor:pointer;min-width:220px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.county-select:focus{outline:none;border-color:var(--ep)}
+.count-label{font-size:12px;color:var(--mid);font-style:italic}
+.shelter-list{display:flex;flex-direction:column;gap:10px}
+.shelter-card{background:white;border:1px solid var(--lb);border-radius:8px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;transition:border-color .15s}
+.shelter-card:hover{border-color:#c8b8c5}
+.shelter-info{flex:1;min-width:0}
+.shelter-name{font-size:14px;font-weight:500;color:var(--dark);margin-bottom:3px}
+.shelter-meta{font-size:12px;color:var(--mid);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.cfa-badge{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);background:var(--gold-light);border:1px solid #e8d9a0;border-radius:4px;padding:2px 7px;white-space:nowrap}
+.correct-link{font-size:12px;color:var(--ep);text-decoration:none;white-space:nowrap;border-bottom:1px solid transparent;transition:border-color .15s;flex-shrink:0}
+.correct-link:hover{border-bottom-color:var(--ep)}
+.no-results{font-size:14px;color:var(--mid);font-style:italic;padding:24px 0;text-align:center}
+.section-label{font-size:10px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--lb)}
+.form-section{margin-bottom:32px}
+.type-toggle{display:flex;border:1px solid var(--lb);border-radius:8px;overflow:hidden;margin-bottom:36px}
+.type-btn{flex:1;padding:11px 16px;border:none;background:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:300;cursor:pointer;color:var(--mid);transition:all .15s;letter-spacing:.02em}
+.type-btn.active{background:var(--ep);color:#FAF7F2;font-weight:500}
+.type-btn:not(.active):hover{background:var(--lbg)}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;font-weight:400;color:var(--mid);margin-bottom:6px}
+.required{color:var(--gold);margin-left:2px}
+.field input[type=text],.field input[type=email],.field input[type=tel],.field select,.field textarea{width:100%;padding:10px 14px;border:1px solid var(--lb);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:300;color:var(--dark);background:white;transition:border-color .15s;appearance:none;-webkit-appearance:none}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--ep)}
+.field textarea{height:90px;resize:vertical;line-height:1.6}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.radio-group{display:flex;flex-wrap:wrap;gap:20px;padding:10px 0 4px}
+.radio-group label{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:300;color:var(--dark);cursor:pointer;margin-bottom:0}
+.radio-group input[type=radio]{width:15px;height:15px;accent-color:var(--ep);cursor:pointer;flex-shrink:0}
+.field-note{font-size:12px;color:var(--mid);margin-top:5px;font-style:italic}
+.submit-btn{width:100%;padding:14px;background:var(--ep);color:#FAF7F2;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;letter-spacing:.02em;transition:opacity .15s,transform .1s}
+.submit-btn:hover{opacity:.88}
+.submit-btn:active{opacity:.75;transform:scale(.99)}
+.submit-note{font-size:12px;color:var(--mid);text-align:center;margin-top:10px;font-style:italic}
+.success-card{display:none;background:var(--sbg);border:1px solid var(--sbd);border-radius:10px;padding:32px 28px;text-align:center;margin-top:16px}
+.success-card h2{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;color:var(--stx);margin-bottom:10px}
+.success-card p{font-size:14px;color:var(--stx);line-height:1.7}
+footer{border-top:1px solid var(--lb);padding:24px 48px;text-align:center}
+footer p{font-size:11px;color:var(--mid);letter-spacing:.04em}
+@media(max-width:520px){nav{padding:16px 20px}.page-wrap{padding:36px 20px 60px}.page-header h1{font-size:32px}.field-row{grid-template-columns:1fr}.shelter-card{flex-direction:column;align-items:flex-start;gap:10px}footer{padding:20px}}
+</style>
+</head>
+<body>
+
+<div class="top-rule"></div>
+<nav>
+  <span class="nav-brand">Bastet</span>
+  <span class="nav-tag">Shelter Portal</span>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <div class="gold-rule"></div>
+    <h1>Shelter portal</h1>
+    <p>View active shelter listings in Bastet or submit a new listing and update request. All submissions are reviewed manually before any change goes live.</p>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" id="tab-btn-shelters" onclick="showTab('shelters',this)">Active shelters</button>
+    <button class="tab-btn" id="tab-btn-submit" onclick="showTab('submit',this)">Submit or update</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-shelters">
+    <div class="list-controls">
+      <select class="county-select" id="county-filter" onchange="filterShelters()">
+        <option value="">All counties</option>
+        <option>Aiken County</option>
+        <option>Barnwell County</option>
+        <option>Beaufort County</option>
+        <option>Berkeley County</option>
+        <option>Charleston County</option>
+        <option>Chesterfield County</option>
+        <option>Colleton County</option>
+        <option>Darlington County</option>
+        <option>Dillon County</option>
+        <option>Florence County</option>
+        <option>Georgetown County</option>
+        <option>Greenwood County</option>
+        <option>Laurens County</option>
+        <option>Marion County</option>
+        <option>Marlboro County</option>
+        <option>Richland County</option>
+        <option>Spartanburg County</option>
+        <option>Sumter County</option>
+        <option>Williamsburg County</option>
+        <option>York County</option>
+      </select>
+      <span class="count-label" id="count-label">Showing all 22 shelters</span>
+    </div>
+    <div class="shelter-list" id="shelter-list"></div>
+  </div>
+
+  <div class="tab-panel" id="tab-submit">
+    <div class="type-toggle">
+      <button class="type-btn active" id="btn-new" onclick="setType('new')">New shelter</button>
+      <button class="type-btn" id="btn-update" onclick="setType('update')">Update existing listing</button>
+    </div>
+    <form id="shelter-form">
+      <input type="hidden" id="submission-type" value="New shelter">
+      <div class="form-section">
+        <div class="section-label">Shelter information</div>
+        <div class="field">
+          <label>Shelter name <span class="required">*</span></label>
+          <input type="text" id="shelter-name" placeholder="Full organization name" required>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>City <span class="required">*</span></label>
+            <input type="text" id="city" placeholder="City" required>
+          </div>
+          <div class="field">
+            <label>State <span class="required">*</span></label>
+            <select id="state" required>
+              <option value="">Select state</option>
+              <option value="SC" selected>South Carolina</option>
+              <option value="NC">North Carolina</option>
+              <option value="GA">Georgia</option>
+              <option value="VA">Virginia</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Is the shelter address public? <span class="required">*</span></label>
+          <div class="radio-group">
+            <label><input type="radio" name="address-public" value="Yes" required> Yes — address can be shown</label>
+            <label><input type="radio" name="address-public" value="No"> No — call for address only</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Street address</label>
+          <input type="text" id="address" placeholder="Street address, city, state, zip">
+          <p class="field-note">Leave blank if address is confidential.</p>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="section-label">Contact</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Phone number</label>
+            <input type="tel" id="phone" placeholder="(000) 000-0000">
+          </div>
+          <div class="field">
+            <label>Hotline number</label>
+            <input type="tel" id="hotline" placeholder="(000) 000-0000">
+          </div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="section-label">Details</div>
+        <div class="field">
+          <label>Pet friendly?</label>
+          <div class="radio-group">
+            <label><input type="radio" name="pet-friendly" value="Yes"> Yes</label>
+            <label><input type="radio" name="pet-friendly" value="No"> No</label>
+            <label><input type="radio" name="pet-friendly" value="Unknown" checked> Unknown</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Additional notes</label>
+          <textarea id="notes" placeholder="Any other details, corrections, or context we should know…"></textarea>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="section-label">Your information</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Your name <span class="required">*</span></label>
+            <input type="text" id="submitter-name" placeholder="Full name" required>
+          </div>
+          <div class="field">
+            <label>Your email <span class="required">*</span></label>
+            <input type="email" id="submitter-email" placeholder="email@organization.org" required>
+          </div>
+        </div>
+        <p class="field-note">Submissions from organizational email addresses are prioritized for review.</p>
+      </div>
+      <button type="submit" class="submit-btn">Submit listing</button>
+      <p class="submit-note">All submissions are reviewed manually. Nothing goes live automatically.</p>
+    </form>
+    <div class="success-card" id="success">
+      <h2>Submission received</h2>
+      <p>Thank you for helping keep Bastet accurate. All listings are reviewed before any changes go live. If we have questions we will follow up at the email you provided.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>Bastet Shelter Portal &nbsp;&middot;&nbsp; Marble Ceilings &nbsp;&middot;&nbsp; info@marbleceilings.com &nbsp;&middot;&nbsp; All submissions reviewed manually</p>
+</footer>
+
+<script>
+const SHELTERS=[
+  {name:"My Sister's House",city:"Charleston",county:"Charleston County",phone:"(843) 744-3242",cfa:true},
+  {name:"Sistercare Inc",city:"Columbia",county:"Richland County",phone:"(803) 926-0505",cfa:false},
+  {name:"Cumbee",city:"Aiken",county:"Aiken County",phone:"(803) 641-4162",cfa:false},
+  {name:"Cumbee",city:"Barnwell",county:"Barnwell County",phone:"(803) 259-4451",cfa:false},
+  {name:"Hopeful Horizons",city:"Beaufort",county:"Beaufort County",phone:null,cfa:false},
+  {name:"Hopeful Horizons",city:"Walterboro",county:"Colleton County",phone:"(843) 524-2256",cfa:false},
+  {name:"Pee Dee Coalition Against Domestic and Sexual Assault",city:"Chesterfield",county:"Chesterfield County",phone:"(843) 623-7364",cfa:false},
+  {name:"Pee Dee Coalition Against Domestic and Sexual Assault",city:"Hartsville",county:"Darlington County",phone:"(843) 383-0240",cfa:false},
+  {name:"Pee Dee Coalition Against Domestic and Sexual Assault",city:"Darlington",county:"Darlington County",phone:"(843) 383-5534",cfa:false},
+  {name:"Pee Dee Coalition Against Domestic and Sexual Assault",city:"Dillon",county:"Dillon County",phone:"(843) 774-0898",cfa:false},
+  {name:"Pee Dee Coalition Against Domestic and Sexual Assault",city:"Florence",county:"Florence County",phone:"(843) 669-4694",cfa:false},
+  {name:"Pee Dee Coalition Against Domestic and Sexual Assault",city:"Marion",county:"Marion County",phone:"(843) 423-6568",cfa:false},
+  {name:"Pee Dee Coalition Against Domestic and Sexual Assault",city:"Bennettsville",county:"Marlboro County",phone:"(843) 479-0882",cfa:false},
+  {name:"Pee Dee Coalition Against Domestic and Sexual Assault",city:"Kingstree",county:"Williamsburg County",phone:"(843) 354-6481",cfa:false},
+  {name:"Pee Dee Coalition Against Domestic and Sexual Assault",city:"Lake City",county:"Florence County",phone:"(843) 374-5026",cfa:false},
+  {name:"Project R.E.S.T.",city:"Spartanburg",county:"Spartanburg County",phone:"(800) 273-5066",cfa:false},
+  {name:"Safe Passage",city:"Rock Hill",county:"York County",phone:"(800) 659-0977",cfa:false},
+  {name:"YMCA of the Upper Lowlands",city:"Sumter",county:"Sumter County",phone:"(803) 773-7158",cfa:false},
+  {name:"Family Justice Center",city:"Georgetown",county:"Georgetown County",phone:"(843) 546-3926",cfa:true},
+  {name:"Meg's House",city:"Greenwood",county:"Greenwood County",phone:"(800) 447-7992",cfa:true},
+  {name:"The Safe Home (Laurens County)",city:"Clinton",county:"Laurens County",phone:"(866) 598-5932",cfa:true},
+  {name:"Palmetto Hope Network",city:"Hanahan",county:"Berkeley County",phone:"(843) 904-2592",cfa:true}
+];
+
+function correctLink(s){
+  const sub=encodeURIComponent(`[Bastet] Update: ${s.name} \u2014 ${s.city}, SC`);
+  const bod=encodeURIComponent(`Submission type: Update existing listing\n\n--- SHELTER INFORMATION ---\nName: ${s.name}\nCity: ${s.city}\nCounty: ${s.county}\n\n--- WHAT NEEDS TO BE CORRECTED ---\n(Please describe the update needed)\n\n\n--- SUBMITTED BY ---\nName: \nEmail: `);
+  return `mailto:info@marbleceilings.com?subject=${sub}&body=${bod}`;
+}
+
+function renderShelters(list){
+  const el=document.getElementById('shelter-list');
+  const lbl=document.getElementById('count-label');
+  lbl.textContent=list.length===SHELTERS.length?`Showing all ${SHELTERS.length} shelters`:`Showing ${list.length} of ${SHELTERS.length} shelters`;
+  if(!list.length){el.innerHTML='<p class="no-results">No shelters found for this county.</p>';return;}
+  el.innerHTML=list.map(s=>`
+    <div class="shelter-card">
+      <div class="shelter-info">
+        <div class="shelter-name">${s.name}</div>
+        <div class="shelter-meta">
+          <span>${s.city}, SC</span>
+          <span>${s.county}</span>
+          ${s.phone?`<span>${s.phone}</span>`:''}
+          ${s.cfa?'<span class="cfa-badge">Call for address</span>':''}
+        </div>
+      </div>
+      <a class="correct-link" href="${correctLink(s)}">Is this correct? &rarr;</a>
+    </div>`).join('');
+}
+
+function filterShelters(){
+  const c=document.getElementById('county-filter').value;
+  renderShelters(c?SHELTERS.filter(s=>s.county===c):SHELTERS);
+}
+
+function showTab(tab,btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+function setType(type){
+  document.getElementById('submission-type').value=type==='new'?'New shelter':'Update existing listing';
+  document.getElementById('btn-new').classList.toggle('active',type==='new');
+  document.getElementById('btn-update').classList.toggle('active',type!=='new');
+}
+
+document.getElementById('shelter-form').addEventListener('submit',function(e){
+  e.preventDefault();
+  const v=id=>document.getElementById(id).value;
+  const r=n=>document.querySelector(`input[name="${n}"]:checked`)?.value||'Not specified';
+  const sub=encodeURIComponent(`[Bastet] ${v('submission-type')}: ${v('shelter-name')} \u2014 ${v('city')}, ${v('state')}`);
+  const bod=encodeURIComponent(`Submission type: ${v('submission-type')}\n\n--- SHELTER INFORMATION ---\nName: ${v('shelter-name')}\nCity: ${v('city')}\nState: ${v('state')}\nAddress public: ${r('address-public')}\nAddress: ${v('address')||'Not provided'}\nPhone: ${v('phone')||'Not provided'}\nHotline: ${v('hotline')||'Not provided'}\nPet friendly: ${r('pet-friendly')}\n\n--- NOTES ---\n${v('notes')||'None'}\n\n--- SUBMITTED BY ---\nName: ${v('submitter-name')}\nEmail: ${v('submitter-email')}`);
+  window.location.href=`mailto:info@marbleceilings.com?subject=${sub}&body=${bod}`;
+  document.getElementById('shelter-form').style.display='none';
+  document.getElementById('success').style.display='block';
+});
+
+renderShelters(SHELTERS);
+</script>
+</body>
+</html>
