@@ -345,6 +345,22 @@ export default function HomeScreen() {
               <View style={styles.ctaArrowIcon} />
             </View>
           </TouchableOpacity>
+        ) : status === "error" ? (
+          // GPS timeout or error — give user a path forward without being stuck
+          <TouchableOpacity
+            onPress={() => router.push({ pathname: "/shelters", params: { lat: "", lon: "" } })}
+            style={styles.ctaBtn}
+            accessibilityLabel="Browse all shelters"
+            accessibilityRole="button"
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={styles.ctaLabel}>Browse All Shelters</Text>
+              <Text style={styles.ctaSub}>Sorted alphabetically without location</Text>
+            </View>
+            <View style={styles.ctaArrow}>
+              <View style={styles.ctaArrowIcon} />
+            </View>
+          </TouchableOpacity>
         ) : !showCard ? (
           <TouchableOpacity onPress={requestLocation} style={styles.ctaBtn} accessibilityLabel="Find help near me" accessibilityRole="button">
             <View style={{ flex: 1 }}>
