@@ -11,17 +11,18 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.marbleceilings.bastet",
+      "deploymentTarget": "15.1",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "Bastet uses your location once to find the nearest domestic violence shelter. Your location is calculated on your device, never stored, and never shared."
       }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#0C0C0C"
       },
+      "versionCode": 5,
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.marbleceilings.bastet"

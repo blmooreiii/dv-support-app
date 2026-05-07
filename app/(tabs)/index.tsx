@@ -7,7 +7,6 @@ import {
   Alert,
   Linking,
   Platform,
-
   ScrollView,
   StyleSheet,
   Text,
@@ -142,6 +141,20 @@ function ShelterCard({ shelter, onDirections, onOtherShelters, onReset }: {
         )}
       </View>
 
+      {/* FIX: Always show phone number if available - not just for callForAddress */}
+      {phone && (
+        <View style={styles.phoneRow}>
+          <Text style={styles.phoneLabel}>Phone</Text>
+          <TouchableOpacity
+            onPress={() => Linking.openURL(`tel:${phone.replace(/\D/g, "")}`)}
+            accessibilityLabel={`Call ${phone}`}
+            accessibilityRole="button"
+          >
+            <Text style={styles.phoneNumber}>{phone}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {callOnly && (
         <View style={styles.callWrap}>
           <View style={styles.callCard}>
@@ -150,16 +163,6 @@ function ShelterCard({ shelter, onDirections, onOtherShelters, onReset }: {
               <Text style={styles.callTitle}>Call for location</Text>
             </View>
             <Text style={styles.callNote}>{getCallForAddressNote(shelter)}</Text>
-            {phone && (
-              <TouchableOpacity
-                onPress={() => Linking.openURL(`tel:${phone.replace(/\D/g, "")}`)}
-                style={styles.callBtn}
-                accessibilityLabel={`Call ${phone}`}
-                accessibilityRole="button"
-              >
-                <Text style={styles.callBtnText}>{phone}</Text>
-              </TouchableOpacity>
-            )}
           </View>
         </View>
       )}
@@ -167,7 +170,7 @@ function ShelterCard({ shelter, onDirections, onOtherShelters, onReset }: {
       <View style={styles.cardActions}>
         {!callOnly && (
           <TouchableOpacity onPress={onDirections} accessibilityRole="button" accessibilityLabel="Start directions" style={styles.btnPrimary}>
-            <Text style={styles.btnPrimaryText}>Start Directions</Text>
+            <Text style={styles.btnPrimaryText}>Directions</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity
@@ -192,7 +195,6 @@ export default function HomeScreen() {
   const { privacyCover, setPrivacyCover } = usePrivacyCover();
   const { shouldShow, complete } = useOnboarding();
 
-  // All hooks must be declared before any conditional returns
   const shelters: Shelter[] = useMemo(() => {
     const flattened = (sheltersData as any)?.flat?.() ?? [];
     return validateSheltersRuntime(flattened);
@@ -297,7 +299,6 @@ export default function HomeScreen() {
 
   const showCard = status === "granted" && selectedShelter && isValid(selectedShelter.distanceMiles);
 
-  // ── Conditional renders AFTER all hooks ──
   if (shouldShow === null) return null;
   if (shouldShow) return <OnboardingScreen onDone={complete} />;
 
@@ -330,7 +331,6 @@ export default function HomeScreen() {
             <Text style={styles.spinnerText}>Finding nearest shelter…</Text>
           </View>
         ) : status === "denied" ? (
-          // Location denied — show Browse All Shelters so user isn't stuck
           <TouchableOpacity
             onPress={() => router.push({ pathname: "/shelters", params: { lat: "", lon: "" } })}
             style={styles.ctaBtn}
@@ -346,7 +346,6 @@ export default function HomeScreen() {
             </View>
           </TouchableOpacity>
         ) : status === "error" ? (
-          // GPS timeout or error — give user a path forward without being stuck
           <TouchableOpacity
             onPress={() => router.push({ pathname: "/shelters", params: { lat: "", lon: "" } })}
             style={styles.ctaBtn}
@@ -437,7 +436,8 @@ const styles = StyleSheet.create({
   noticeTextInfo: { color: "#1A4A7A" },
   noticeAction: { marginTop: Spacing.sm, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md, borderRadius: Radius.sm, backgroundColor: C.stone, alignSelf: "flex-start" },
   noticeActionText: { fontFamily: "DMSans_600SemiBold", fontSize: 13, color: C.textPrimary },
-  ctaBtn: { marginHorizontal: Spacing.xxl, padding: Spacing.xl, backgroundColor: C.primary, borderRadius: Radius.lg, flexDirection: "row", justifyContent: "space-between", alignItems: "center", shadowColor: C.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.28, shadowRadius: 16, elevation: 8 },  ctaLabel: { fontFamily: "DMSans_600SemiBold", fontSize: 18, color: "#fff", letterSpacing: -0.2 },
+  ctaBtn: { marginHorizontal: Spacing.xxl, padding: Spacing.xl, backgroundColor: C.primary, borderRadius: Radius.lg, flexDirection: "row", justifyContent: "space-between", alignItems: "center", shadowColor: C.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.28, shadowRadius: 16, elevation: 8 },
+  ctaLabel: { fontFamily: "DMSans_600SemiBold", fontSize: 18, color: "#fff", letterSpacing: -0.2 },
   ctaSub: { fontFamily: "DMSans_300Light", fontSize: 13, color: "rgba(255,255,255,0.72)", marginTop: 3 },
   ctaArrow: { width: 42, height: 42, borderRadius: 21, backgroundColor: "rgba(255,255,255,0.26)", alignItems: "center", justifyContent: "center" },
   ctaArrowIcon: { width: 10, height: 10, borderTopWidth: 2, borderRightWidth: 2, borderColor: "#fff", transform: [{ rotate: "45deg" }, { translateX: -2 }] },
@@ -453,6 +453,28 @@ const styles = StyleSheet.create({
   metaItem: { gap: 2 },
   metaLabel: { fontFamily: "DMSans_500Medium", fontSize: 11, color: C.textMuted, textTransform: "uppercase", letterSpacing: 0.4 },
   metaValue: { fontFamily: "DMSans_500Medium", fontSize: 14, color: C.textPrimary },
+  phoneRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: C.stone,
+  },
+  phoneLabel: {
+    fontFamily: "DMSans_500Medium",
+    fontSize: 11,
+    color: C.textMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  phoneNumber: {
+    fontFamily: "DMSans_600SemiBold",
+    fontSize: 15,
+    color: C.primary,
+    textDecorationLine: "underline",
+  },
   callWrap: { padding: Spacing.md, paddingHorizontal: Spacing.lg, borderBottomWidth: 1, borderBottomColor: C.stone },
   callCard: { backgroundColor: C.callBg, borderRadius: Radius.md, borderWidth: 1, borderColor: C.callBorder, padding: Spacing.lg },
   callIconRow: { flexDirection: "row", alignItems: "center", gap: Spacing.sm, marginBottom: Spacing.sm },

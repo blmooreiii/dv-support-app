@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bastet — Action Items</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --ep: #4A1942; --gold: #C9A84C; --gold-light: #fdf8ee;
+    --cream: #FAF7F2; --dark: #1A1A1A; --mid: #666;
+    --lb: #E8E2D9; --lbg: #F5F2EE; --green: #2D7D2D; --green-bg: #EEF7EE;
+    --amber: #B85C00; --amber-bg: #FEF8EE;
+  }
+  body { background: var(--cream); color: var(--dark); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; }
+  .top-rule { height: 3px; background: linear-gradient(90deg, var(--ep), var(--gold)); }
+  nav { padding: 16px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--lb); }
+  .nav-brand { font-family: 'Cormorant Garamond', serif; font-size: 17px; letter-spacing: .08em; color: var(--ep); text-transform: uppercase; }
+  .nav-date { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--mid); }
+  .page { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+  .page-header { margin-bottom: 40px; }
+  .gold-rule { width: 40px; height: 2px; background: var(--gold); margin-bottom: 14px; }
+  .page-header h1 { font-family: 'Cormorant Garamond', serif; font-size: 38px; font-weight: 300; color: var(--ep); margin-bottom: 8px; line-height: 1.1; }
+  .page-header p { font-size: 13px; color: var(--mid); }
+  .progress-bar-wrap { background: var(--lb); border-radius: 99px; height: 5px; margin-bottom: 40px; overflow: hidden; }
+  .progress-bar { background: linear-gradient(90deg, var(--ep), var(--gold)); height: 100%; border-radius: 99px; transition: width .4s ease; }
+  .progress-label { font-size: 12px; color: var(--mid); margin-bottom: 8px; font-style: italic; }
+  .section { margin-bottom: 36px; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--lb); }
+  .section-title { font-size: 10px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+  .section-count { font-size: 11px; color: var(--mid); font-style: italic; }
+  .item { display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; background: white; border: 1px solid var(--lb); border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: border-color .15s, opacity .2s; user-select: none; }
+  .item:hover { border-color: #c8b8c5; }
+  .item.done { opacity: .55; }
+  .item.done .item-text { text-decoration: line-through; color: var(--mid); }
+  .checkbox { width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid var(--lb); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+  .item.done .checkbox { background: var(--ep); border-color: var(--ep); }
+  .checkmark { display: none; color: white; font-size: 11px; font-weight: 700; }
+  .item.done .checkmark { display: block; }
+  .item-body { flex: 1; min-width: 0; }
+  .item-text { font-size: 14px; color: var(--dark); line-height: 1.5; font-weight: 400; }
+  .item-note { font-size: 12px; color: var(--mid); margin-top: 3px; font-style: italic; line-height: 1.4; }
+  .item-tag { display: inline-block; font-size: 10px; font-weight: 500; letter-spacing: .07em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; margin-top: 5px; }
+  .tag-monday { background: var(--amber-bg); color: var(--amber); border: 1px solid #f0d4a0; }
+  .tag-now { background: #f5eef5; color: var(--ep); border: 1px solid #d4b8d0; }
+  .tag-pending { background: var(--lbg); color: var(--mid); border: 1px solid var(--lb); }
+  .tag-done { background: var(--green-bg); color: var(--green); border: 1px solid #b8d4b8; }
+
+  /* Expandable sub-items */
+  .expand-btn { font-size: 11px; color: var(--ep); background: none; border: none; cursor: pointer; padding: 4px 0 0; font-family: 'DM Sans', sans-serif; font-weight: 400; text-decoration: underline; display: block; }
+  .sub-items { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--lb); }
+  .sub-items.open { display: block; }
+  .sub-item { font-size: 12px; color: var(--dark); padding: 6px 0; border-bottom: 1px solid var(--lb); line-height: 1.5; }
+  .sub-item:last-child { border-bottom: none; }
+  .sub-item strong { font-weight: 500; color: var(--ep); }
+
+  .reset-btn { font-size: 11px; color: var(--mid); background: none; border: 1px solid var(--lb); border-radius: 6px; padding: 6px 14px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: border-color .15s; }
+  .reset-btn:hover { border-color: var(--ep); color: var(--ep); }
+  footer { border-top: 1px solid var(--lb); padding: 20px 40px; text-align: center; }
+  footer p { font-size: 11px; color: var(--mid); letter-spacing: .04em; }
+</style>
+</head>
+<body>
+<div class="top-rule"></div>
+<nav>
+  <span class="nav-brand">Bastet</span>
+  <span class="nav-date">Week of March 21, 2026</span>
+</nav>
+
+<div class="page">
+  <div class="page-header">
+    <div class="gold-rule"></div>
+    <h1>Action items</h1>
+    <p>Current week priorities across all tracks. Click any item to mark complete.</p>
+  </div>
+
+  <p class="progress-label" id="progress-label">0 of 14 complete</p>
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+
+  <!-- WAITING ON APPLE -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Waiting on Apple</span>
+      <span class="section-count" id="count-apple"></span>
+    </div>
+    <div class="item" data-section="apple" onclick="toggle(this)">
+      <div class="checkbox"><span class="checkmark">✓</span></div>
+      <div class="item-body">
+        <div class="item-text">TestFlight build approved — send invites to all 5 beta testers</div>
+        <div class="item-note">Dr. Bertrina Scott PhD, Tiha, Chloe, Yaunna Stewart, Leaeryn Moore — email draft is ready</div>
+        <span class="item-tag tag-pending">Pending Apple</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONDAY 3/23 OUTREACH -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Monday 3/23 — Outreach</span>
+      <span class="section-count" id="count-monday"></span>
+    </div>
+
+    <div class="item" data-section="monday" onclick="toggle(this)">
+      <div class="checkbox"><span class="checkmark">✓</span></div>
+      <div class="item-body">
+        <div class="item-text">Call My Sister's House — confirm current model before public launch</div>
+        <div class="item-note">(843) 744-3242 — verify they still help with placement, update entry framing if needed</div>
+        <span class="item-tag tag-monday">Monday</span>
+      </div>
+    </div>
+
+    <div class="item" data-section="monday" onclick="toggleExpand(event, this)">
+      <div class="checkbox"><span class="checkmark">✓</span></div>
+      <div class="item-body">
+        <div class="item-text">Give Leaeryn questions for My Sister's House contact</div>
+        <div class="item-note">Leaeryn is making the call — prep her with specific questions before Monday</div>
+        <span class="item-tag tag-monday">Monday</span>
+        <button class="expand-btn" onclick="event.stopPropagation(); flipExpand(this)">Show questions ↓</button>
+        <div class="sub-items">
+          <div class="sub-item"><strong>1. Current model</strong> — Do you still operate a physical shelter or exclusively place women in hotels and other locations?</div>
+          <div class="sub-item"><strong>2. Intake process</strong> — If someone calls through the app, what happens next? Who do they speak to and how quickly can they get placed?</div>
+          <div class="sub-item"><strong>3. Capacity</strong> — Is there a situation where someone calls and you can't help them find placement? What happens then?</div>
+          <div class="sub-item"><strong>4. Coverage area</strong> — Are you limited to Charleston or do you help women across the lowcountry?</div>
+          <div class="sub-item"><strong>5. Listing accuracy</strong> — We have your hotline listed as (843) 744-3242. Is that still the right number for someone seeking help?</div>
+          <div class="sub-item"><strong>6. Partnership interest</strong> — We're building a resource locator app for DV survivors. Would you be open to staying in the loop as we grow?</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="item" data-section="monday" onclick="toggle(this)">
+      <div class="checkbox"><span class="checkmark">✓</span></div>
+      <div class="item-body">
+        <div class="item-text">Reach out to Butch & Lisa Kennedy — verify Georgetown shelter before adding to app</div>
+        <div class="item-note">Contact info coming from Dr. Lewis-Kendrick — do not add to app until independently verified</div>
+        <span class="item-tag tag-monday">Monday</span>
+      </div>
+    </div>
+
+    <div class="item" data-section="monday" onclick="toggle(this)">
+      <div class="checkbox"><span class="checkmark">✓</span></div>
+      <div class="item-body">
+        <div class="item-text">Follow up with Dr. Lewis-Kendrick — Kennedy contact info + committee list</div>
+        <div class="item-note">Still waiting on her email with contact info and April event materials</div>
+        <span class="item-tag tag-monday">Monday</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BETA PREP -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Beta prep</span>
+      <span class="section-count" id="count-beta"></span>
+    </div>
+
+    <div class="item" data-section="beta" onclick="toggle(this)">
+      <div class="checkbox"><span class="checkmark">✓</span></div>
+      <div class="item-body">
+        <div class="item-text">Set up Google Play Developer account — Android beta</div>
+        <div class="item-note">$25 one-time fee — needed before eas build --platform android</div>
+        <span class="item-tag tag-now">This week</span>
+      </div>
+    </div>
+
+    <div class="item" data-section="beta" onclick="toggle(this)">
+      <div class="checkbox"><span class="checkmark">✓</span></div>
+      <div class="item-body">
+        <div class="item-text">Run Android beta build — eas build --platform android --profile preview</div>
+        <div class="item-note">Requires Google Play Developer account first</div>
+        <span class="item-tag tag-now">This week</span>
+      </div>
+    </div>
+
+    <div class="item" data-section="beta" onclick="toggle(this)">
+      <div class="checkbox"><span class="checkmark">✓</span></div>
+      <div class="item-body">
+        <div class="item-text">API 29 (Android 10) emulator test</div>
+        <div class="item-note">~20 minutes — confirm Android parity before testers receive the app</div>
+        <span class="item-tag tag-now">This week</span>
+      </div>
+    </div>
+
+    <div class="item" data-section="beta" onclick="toggle(this)">
+      <div class="checkbox"><span class="checkmark">✓</span></div>
+      <div class="item-body">
+        <div class="item-text">Confirm neurodivergent contact for post-beta focus group</div>
+        <div class="item-note">She said yes — log as confirmed for post-beta UX review track</div>
+        <span class="item-tag tag-done">Confirmed</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CODE -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Code</span>
+      <span class="section-count" id="count-code"></span>
+    </div>
+
+    <div class="item done" data-section="code" onclick="toggle(this)">
+      <div class="checkbox"><span class="checkmark">✓</span></div>
+      <div class="item-body">
+        <div class="item-text">Delete shelters_4.tsx — confirmed duplicate of shelters.tsx</div>
+        <div class="item-note">In-app calling already live in current build — no new work needed</div>
+        <span class="item-tag tag-done">Done</span>
+      </div>
+    </div>
+
+    <div class="item" data-section="code" onclick="toggle(this)">
+      <div class="checkbox"><span class="checkmark">✓</span></div>
+      <div class="item-body">
+        <div class="item-text">Test in-app calling on physical device once TestFlight is approved</div>
+        <div class="item-note">tel: links don't work on simulator — confirmed working on real iPhone is the final check</div>
+        <span class="item-tag tag-pending">Pending TestFlight</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- APRIL EVENTS -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">April events</span>
+      <span class="section-count" id="count-april"></span>
+    </div>
+
+    <div class="item" data-section="april" onclick="toggle(this)">
+      <div class="checkbox"><span class="checkmark">✓</span></div>
+      <div class="item-body">
+        <div class="item-text">Register for April 17 — "What Were You Wearing?" Reception</div>
+        <div class="item-note">North Charleston City Hall, 2–6 PM — registration: redcap.musc.edu/surveys/?s=PXPJCMCTCAW97NEA</div>
+        <span class="item-tag tag-now">Register now</span>
+      </div>
+    </div>
+
+    <div class="item" data-section="april" onclick="toggle(this)">
+      <div class="checkbox"><span class="checkmark">✓</span></div>
+      <div class="item-body">
+        <div class="item-text">Attend April 18 — Proclamation & Exhibit</div>
+        <div class="item-note">Keith Summey North Charleston Library, 10:30 AM–1:30 PM — law enforcement, forensic nurses, solicitors, social workers all present</div>
+        <span class="item-tag tag-now">Block calendar</span>
+      </div>
+    </div>
+  </div>
+
+  <button class="reset-btn" onclick="resetAll()">Reset all</button>
+</div>
+
+<footer>
+  <p>Bastet Action Items &nbsp;&middot;&nbsp; Week of March 21, 2026 &nbsp;&middot;&nbsp; Marble Ceilings</p>
+</footer>
+
+<script>
+const STORAGE_KEY = 'bastet-todos-mar21';
+
+function getState() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch { return {}; }
+}
+
+function saveState(state) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+}
+
+function toggle(el) {
+  el.classList.toggle('done');
+  persistAndUpdate();
+}
+
+function toggleExpand(e, el) {
+  el.classList.toggle('done');
+  persistAndUpdate();
+}
+
+function flipExpand(btn) {
+  const sub = btn.nextElementSibling;
+  sub.classList.toggle('open');
+  btn.textContent = sub.classList.contains('open') ? 'Hide questions ↑' : 'Show questions ↓';
+}
+
+function persistAndUpdate() {
+  const items = document.querySelectorAll('.item');
+  const state = {};
+  items.forEach((item, i) => { state[i] = item.classList.contains('done'); });
+  saveState(state);
+  updateProgress();
+  updateCounts();
+}
+
+function updateProgress() {
+  const items = document.querySelectorAll('.item');
+  const done = document.querySelectorAll('.item.done').length;
+  const total = items.length;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${done} of ${total} complete`;
+}
+
+function updateCounts() {
+  const sections = ['apple', 'monday', 'beta', 'code', 'april'];
+  sections.forEach(sec => {
+    const el = document.getElementById('count-' + sec);
+    if (!el) return;
+    const all = document.querySelectorAll(`.item[data-section="${sec}"]`);
+    const done = document.querySelectorAll(`.item.done[data-section="${sec}"]`);
+    el.textContent = `${done.length}/${all.length}`;
+  });
+}
+
+function resetAll() {
+  document.querySelectorAll('.item').forEach(el => el.classList.remove('done'));
+  saveState({});
+  updateProgress();
+  updateCounts();
+}
+
+function restoreState() {
+  const state = getState();
+  const items = document.querySelectorAll('.item');
+  items.forEach((item, i) => {
+    if (state[i]) item.classList.add('done');
+  });
+}
+
+restoreState();
+updateProgress();
+updateCounts();
+</script>
+</body>
+</html>

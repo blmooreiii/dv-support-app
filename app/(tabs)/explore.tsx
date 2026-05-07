@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { useRouter } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import { quickExit } from "@/src/utils/quickExit";
 import { PrivacyCover, usePrivacyCover } from "@/components/PrivacyCover";
 import { Colors, Spacing, Radius } from "@/constants/theme";
@@ -19,11 +20,16 @@ const C = Colors.light;
 
 const open = async (url: string) => {
   try {
-    const can = await Linking.canOpenURL(url);
-    if (!can) return Alert.alert("Unable to open", "No browser available.");
-    await Linking.openURL(url);
-  } catch {
-    Alert.alert("Unable to open", "Please try again.");
+    const result = await WebBrowser.openBrowserAsync(url, {
+      dismissButtonStyle: "close",
+      controlsColor: C.primary,
+      toolbarColor: C.background,
+      presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
+    });
+    console.log("WebBrowser result:", result);
+  } catch (error) {
+    console.error("WebBrowser error:", error);
+    Alert.alert("Unable to open link", "Please try again.");
   }
 };
 

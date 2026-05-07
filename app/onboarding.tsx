@@ -28,15 +28,14 @@ interface Props {
 }
 
 export default function OnboardingScreen({ onDone }: Props) {
-  const [step, setStep] = useState<0 | 1>(0);
+  const [step, setStep] = useState<0 | 1 | 2>(0);
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
-  const transitionTo = (nextStep: 0 | 1) => {
+  const transitionTo = (nextStep: 0 | 1 | 2) => {
     Animated.sequence([
       Animated.timing(fadeAnim, { toValue: 0, duration: 180, useNativeDriver: true }),
       Animated.timing(fadeAnim, { toValue: 1, duration: 220, useNativeDriver: true }),
     ]).start();
-    // slight delay so fade-out completes before content swaps
     setTimeout(() => setStep(nextStep), 180);
   };
 
@@ -46,12 +45,23 @@ export default function OnboardingScreen({ onDone }: Props) {
   };
 
   const handleNext = () => {
-    if (step === 0) {
-      transitionTo(1);
-    } else {
-      onDone();
-    }
+    if (step === 0) transitionTo(1);
+    else if (step === 1) transitionTo(2);
+    else onDone();
   };
+
+  const screenContent = step === 0
+    ? <PrivacyScreen />
+    : step === 1
+    ? <QuickExitScreen />
+    : <GalleryCoverScreen />;
+
+  const primaryLabel = step === 2 ? 'Got it, take me in' : step === 1 ? 'I understand' : 'Got it';
+  const a11yLabel = step === 2
+    ? 'Got it, continue to app'
+    : step === 1
+    ? 'I understand, continue'
+    : 'Got it, continue';
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
@@ -61,48 +71,37 @@ export default function OnboardingScreen({ onDone }: Props) {
         <View
           style={styles.dotsRow}
           accessible={true}
-          accessibilityLabel={`Step ${step + 1} of 2`}
+          accessibilityLabel={`Step ${step + 1} of 3`}
         >
           <View style={[styles.dot, step === 0 && styles.dotActive]} />
           <View style={[styles.dot, step === 1 && styles.dotActive]} />
+          <View style={[styles.dot, step === 2 && styles.dotActive]} />
         </View>
 
         {/* ── Content ── */}
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-          {step === 0 ? <PrivacyScreen /> : <QuickExitScreen />}
+          {screenContent}
         </Animated.View>
 
         {/* ── Actions ── */}
         <View style={styles.actions}>
-          {step === 0 ? (
-            <>
-              <TouchableOpacity
-                style={styles.primaryBtn}
-                onPress={handleNext}
-                accessibilityLabel="Got it, continue"
-                accessibilityRole="button"
-              >
-                <Text style={styles.primaryBtnText}>Got it</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.skipBtn}
-                onPress={handleSkip}
-                accessibilityLabel="Skip privacy information"
-                accessibilityRole="button"
-              >
-                <Text style={styles.skipBtnText}>Skip</Text>
-              </TouchableOpacity>
-            </>
-          ) : (
+          <TouchableOpacity
+            style={styles.primaryBtn}
+            onPress={handleNext}
+            accessibilityLabel={a11yLabel}
+            accessibilityRole="button"
+          >
+            <Text style={styles.primaryBtnText}>{primaryLabel}</Text>
+          </TouchableOpacity>
+          {step === 0 && (
             <TouchableOpacity
-              style={styles.primaryBtn}
-              onPress={handleNext}
-              accessibilityLabel="I understand, continue to app"
+              style={styles.skipBtn}
+              onPress={handleSkip}
+              accessibilityLabel="Skip privacy information"
               accessibilityRole="button"
             >
-              <Text style={styles.primaryBtnText}>I understand</Text>
+              <Text style={styles.skipBtnText}>Skip</Text>
             </TouchableOpacity>
-            // No skip button on Quick Exit screen — mandatory
           )}
         </View>
 
@@ -171,6 +170,45 @@ function QuickExitScreen() {
           <Text style={styles.exitDemoBtnText}>Quick Exit</Text>
         </View>
         <Text style={styles.exitDemoCaption}>It's at the top of the app screen.{'\n'}You don't have to look for it.</Text>
+      </View>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Screen 3 — Gallery Cover (mandatory)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function GalleryCoverScreen() {
+  return (
+    <View style={styles.screenInner}>
+      <View style={styles.iconWrap}>
+        <View style={[styles.iconCircle, styles.iconCircleGray]}>
+          <View style={styles.galleryGrid}>
+            {[0,1,2,3].map(i => (
+              <View key={i} style={styles.galleryTile} />
+            ))}
+          </View>
+        </View>
+      </View>
+
+      <Text style={styles.headline}>If someone picks up{'\n'}your phone…</Text>
+
+      <View style={styles.divider} />
+
+      <Text style={styles.body}>
+        Opening Bastet shows a photo gallery instead of the app. Only you know how to get back in.
+      </Text>
+
+      <View style={styles.exitDemoBox}>
+        <View style={styles.gestureDemoRow}>
+          <View style={styles.gestureFinger} />
+          <Text style={styles.gestureArrow}>→</Text>
+          <View style={styles.gestureHoldBar} />
+        </View>
+        <Text style={styles.exitDemoCaption}>
+          Hold anywhere on the gallery screen.{'\n'}The app opens after about half a second.
+        </Text>
       </View>
     </View>
   );
@@ -356,6 +394,51 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
     color: C.textMuted,
+  },
+
+  // ── Gallery cover icon ──
+  iconCircleGray: {
+    backgroundColor: '#F0F0F0',
+  },
+  galleryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    width: 36,
+    height: 36,
+    gap: 3,
+  },
+  galleryTile: {
+    width: 15,
+    height: 15,
+    borderRadius: 2,
+    backgroundColor: '#C8B8A2',
+  },
+
+  // ── Gesture demo ──
+  gestureDemoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  gestureFinger: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: C.primary,
+    opacity: 0.7,
+  },
+  gestureArrow: {
+    fontFamily: Typography.sans,
+    fontSize: 16,
+    color: C.textMuted,
+  },
+  gestureHoldBar: {
+    flex: 1,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: C.primary,
+    opacity: 0.25,
   },
 
   // ── Actions ──

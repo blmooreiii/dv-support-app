@@ -13,10 +13,13 @@ export default function TabLayout() {
 
   if (!fontsLoaded) return null;
 
+  // Get the theme for current color scheme
+  const theme = Colors[colorScheme ?? 'light'];
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: theme.tint,
         headerShown: false,
         tabBarButton: HapticTab,
       }}
@@ -27,6 +30,15 @@ export default function TabLayout() {
           title: 'Home',
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="home" size={28} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="bastbot"
+        options={{
+          title: 'BastBot',
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="smart-toy" size={28} color={color} />
           ),
         }}
       />

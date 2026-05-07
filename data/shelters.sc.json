@@ -77,14 +77,14 @@
     "address": "1212 Charles St, Beaufort, SC 29902",
     "latitude": 32.4316,
     "longitude": -80.6698,
-    "phone": null,
-    "hotline": null,
+    "phone": "(843) 524-2256",
+    "hotline": "(843) 770-1070",
     "hasPetOptions": false,
     "website": null,
-    "contactPreference": null,
+    "contactPreference": "phone",
     "verified": true,
-    "lastVerified": "2026-02-21",
-    "source": "verified-shelter-list-2026-02-21"
+    "lastVerified": "2026-04-01",
+    "source": "https://www.hopefulhorizons.org/domestic-violence/"
   },
   {
     "id": "sc-walterboro-hopefu-001",

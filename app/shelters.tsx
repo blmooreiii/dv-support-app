@@ -87,11 +87,17 @@ export default function SheltersScreen() {
   const openMaps = async (s: Shelter) => {
     const url = Platform.OS === "ios"
       ? `http://maps.apple.com/?daddr=${s.latitude},${s.longitude}`
-      : `https://www.google.com/maps/dir/?api=1&destination=${s.latitude},${s.longitude}`;
+      : `geo:0,0?q=${s.latitude},${s.longitude}(${encodeURIComponent(s.name)})`;
     try {
-      if (await Linking.canOpenURL(url)) await Linking.openURL(url);
-      else Alert.alert("Error", "Could not open Maps app.");
-    } catch {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        // Fallback to Google Maps web URL for Android
+        const fallbackUrl = `https://www.google.com/maps/search/?api=1&query=${s.latitude},${s.longitude}`;
+        await Linking.openURL(fallbackUrl);
+      }
+    } catch (error) {
       Alert.alert("Error", "Could not open Maps app.");
     }
   };
@@ -127,6 +133,20 @@ export default function SheltersScreen() {
         {item.hasPetOptions && (
           <View style={styles.petTag}>
             <Text style={styles.petTagText}>🐾 Pet friendly</Text>
+          </View>
+        )}
+
+        {/* FIX: Always show phone number if available */}
+        {phone && (
+          <View style={styles.phoneRow}>
+            <Text style={styles.phoneLabel}>Phone</Text>
+            <TouchableOpacity
+              onPress={() => Linking.openURL(`tel:${phone.replace(/\D/g, "")}`)}
+              accessibilityLabel={`Call ${phone}`}
+              accessibilityRole="button"
+            >
+              <Text style={styles.phoneNumber}>{phone}</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -248,6 +268,29 @@ const styles = StyleSheet.create({
 
   petTag: { marginHorizontal: Spacing.lg, marginBottom: Spacing.sm, alignSelf: "flex-start", paddingVertical: 3, paddingHorizontal: 10, borderRadius: Radius.pill, backgroundColor: C.primaryLight },
   petTagText: { fontFamily: "DMSans_500Medium", fontSize: 11, color: C.primary },
+
+  phoneRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: C.stone,
+  },
+  phoneLabel: {
+    fontFamily: "DMSans_500Medium",
+    fontSize: 11,
+    color: C.textMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  phoneNumber: {
+    fontFamily: "DMSans_600SemiBold",
+    fontSize: 15,
+    color: C.primary,
+    textDecorationLine: "underline",
+  },
 
   actionRow: { padding: Spacing.md, paddingHorizontal: Spacing.lg, borderTopWidth: 1, borderTopColor: C.stone },
 
