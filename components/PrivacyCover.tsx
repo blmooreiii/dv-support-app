@@ -23,7 +23,7 @@
  *   }
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { AppState, StyleSheet, Text, View } from "react-native";
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
@@ -31,17 +31,30 @@ import { AppState, StyleSheet, Text, View } from "react-native";
 /**
  * Manages privacy cover visibility based on AppState changes.
  * Import this hook into any screen that needs privacy protection.
+ *
+ * Call suppressNextBackground() before opening an external link (Maps, phone)
+ * to skip the cover for that one background/foreground cycle. The cover still
+ * appears when the user returns from dormant or the app switcher.
  */
 export function usePrivacyCover() {
   const [privacyCover, setPrivacyCover] = useState(false);
+  // Set to true before intentionally leaving the app (Maps, phone call) so
+  // that one background → active cycle doesn't trigger the cover.
+  const suppressRef = useRef(false);
+
+  const suppressNextBackground = () => {
+    suppressRef.current = true;
+  };
 
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
       if (state === "inactive" || state === "background") {
+        if (suppressRef.current) return;
         setPrivacyCover(true);
       }
       if (state === "active") {
-        // Small delay ensures the cover doesn't flash on fast foreground returns
+        // Clear the suppress flag once the app is foregrounded again.
+        suppressRef.current = false;
         setTimeout(() => setPrivacyCover(false), 150);
       }
     });
@@ -49,7 +62,7 @@ export function usePrivacyCover() {
     return () => sub.remove();
   }, []);
 
-  return { privacyCover, setPrivacyCover };
+  return { privacyCover, setPrivacyCover, suppressNextBackground };
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────

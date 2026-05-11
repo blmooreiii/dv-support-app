@@ -42,7 +42,7 @@ type ShelterWithDist = Shelter & { distanceMiles?: number };
 export default function SheltersScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ lat?: string; lon?: string }>();
-  const { privacyCover, setPrivacyCover } = usePrivacyCover();
+  const { privacyCover, setPrivacyCover, suppressNextBackground } = usePrivacyCover();
   const [reported, setReported] = useState<Record<string, boolean>>({});
 
   const shelters: Shelter[] = useMemo(() => {
@@ -90,10 +90,10 @@ export default function SheltersScreen() {
       : `geo:0,0?q=${s.latitude},${s.longitude}(${encodeURIComponent(s.name)})`;
     try {
       const canOpen = await Linking.canOpenURL(url);
+      suppressNextBackground();
       if (canOpen) {
         await Linking.openURL(url);
       } else {
-        // Fallback to Google Maps web URL for Android
         const fallbackUrl = `https://www.google.com/maps/search/?api=1&query=${s.latitude},${s.longitude}`;
         await Linking.openURL(fallbackUrl);
       }
@@ -141,7 +141,7 @@ export default function SheltersScreen() {
           <View style={styles.phoneRow}>
             <Text style={styles.phoneLabel}>Phone</Text>
             <TouchableOpacity
-              onPress={() => Linking.openURL(`tel:${phone.replace(/\D/g, "")}`)}
+              onPress={() => { suppressNextBackground(); Linking.openURL(`tel:${phone.replace(/\D/g, "")}`); }}
               accessibilityLabel={`Call ${phone}`}
               accessibilityRole="button"
             >
@@ -161,7 +161,7 @@ export default function SheltersScreen() {
               <Text style={styles.callNote}>{getCallForAddressNote(item)}</Text>
               {phone && (
                 <TouchableOpacity
-                  onPress={() => Linking.openURL(`tel:${phone.replace(/\D/g, "")}`)}
+                  onPress={() => { suppressNextBackground(); Linking.openURL(`tel:${phone.replace(/\D/g, "")}`); }}
                   style={styles.callBtn}
                   accessibilityLabel={`Call ${phone}`}
                   accessibilityRole="button"
