@@ -23,7 +23,6 @@ import {
   getCallForAddressNote,
 } from "@/src/utils/validateShelters";
 import { quickExit } from "@/src/utils/quickExit";
-import { PrivacyCover, usePrivacyCover } from "@/components/PrivacyCover";
 import { Colors, Spacing, Radius, Shadows } from "@/constants/theme";
 
 const C = Colors.light;
@@ -192,7 +191,6 @@ function ShelterCard({ shelter, onDirections, onOtherShelters, onReset }: {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { privacyCover, setPrivacyCover } = usePrivacyCover();
   const { shouldShow, complete } = useOnboarding();
 
   const shelters: Shelter[] = useMemo(() => {
@@ -244,7 +242,9 @@ export default function HomeScreen() {
       setStatus("requesting"); setErrorMsg(""); setServicesOff(false);
       const existing = await Location.getForegroundPermissionsAsync();
       let perm = existing.status;
-      if (perm !== "granted") perm = (await Location.requestForegroundPermissionsAsync()).status;
+      if (perm !== "granted") {
+        perm = (await Location.requestForegroundPermissionsAsync()).status;
+      }
       if (perm !== "granted") { setStatus("denied"); return; }
       if (!(await Location.hasServicesEnabledAsync())) { setServicesOff(true); setStatus("error"); return; }
 
@@ -308,7 +308,7 @@ export default function HomeScreen() {
 
         <View style={styles.header}>
           <Text style={styles.appName}>Bastet</Text>
-          <QuickExitButton onPress={() => quickExit(setPrivacyCover, resetHome)} />
+          <QuickExitButton onPress={() => quickExit(resetHome)} />
         </View>
 
         <View style={styles.hero}>
@@ -408,7 +408,6 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
       </ScrollView>
-      <PrivacyCover visible={privacyCover} />
     </SafeAreaView>
   );
 }

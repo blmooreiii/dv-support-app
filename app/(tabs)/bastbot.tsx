@@ -16,7 +16,6 @@ import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import * as Location from "expo-location";
 import { quickExit } from "@/src/utils/quickExit";
-import { PrivacyCover, usePrivacyCover } from "@/components/PrivacyCover";
 import { Colors, Spacing, Radius, Typography } from "@/constants/theme";
 import { matchQuery, getFAQsByCategory, getSuggestedQuestions } from "@/src/utils/faqMatcher";
 import { FAQ_CATEGORIES, GREETING_MESSAGE, FALLBACK_MESSAGE, FAQItem } from "@/src/data/faqData";
@@ -77,7 +76,6 @@ export default function BastBotScreen() {
 
   const [input, setInput] = useState("");
   const scrollRef = useRef<ScrollView>(null);
-  const { privacyCover, setPrivacyCover } = usePrivacyCover(); // FIX: Use both values from hook
 
   useEffect(() => {
     scrollRef.current?.scrollToEnd({ animated: true });
@@ -161,7 +159,6 @@ export default function BastBotScreen() {
 
   const handleShelterSearch = async () => {
     try {
-      // Request location permission
       const { status } = await Location.requestForegroundPermissionsAsync();
 
       if (status !== "granted") {
@@ -314,7 +311,7 @@ export default function BastBotScreen() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>BastBot</Text>
           <TouchableOpacity
-            onPress={() => quickExit(setPrivacyCover)} // FIX: Pass setPrivacyCover function
+            onPress={() => quickExit()}
             style={styles.exitBtn}
             accessibilityLabel="Quick exit"
             accessibilityRole="button"
@@ -369,7 +366,6 @@ export default function BastBotScreen() {
         </KeyboardAvoidingView>
       </SafeAreaView>
 
-      <PrivacyCover visible={privacyCover} />
     </>
   );
 }

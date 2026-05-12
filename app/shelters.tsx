@@ -15,7 +15,6 @@ import sheltersData from "../data/shelters.sc.json";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { canGetDirections, getCallForAddressNote } from "@/src/utils/validateShelters";
 import { quickExit } from "@/src/utils/quickExit";
-import { PrivacyCover, usePrivacyCover } from "@/components/PrivacyCover";
 import { Colors, Spacing, Radius } from "@/constants/theme";
 
 const C = Colors.light;
@@ -42,7 +41,6 @@ type ShelterWithDist = Shelter & { distanceMiles?: number };
 export default function SheltersScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ lat?: string; lon?: string }>();
-  const { privacyCover, setPrivacyCover, suppressNextBackground } = usePrivacyCover();
   const [reported, setReported] = useState<Record<string, boolean>>({});
 
   const shelters: Shelter[] = useMemo(() => {
@@ -90,7 +88,6 @@ export default function SheltersScreen() {
       : `geo:0,0?q=${s.latitude},${s.longitude}(${encodeURIComponent(s.name)})`;
     try {
       const canOpen = await Linking.canOpenURL(url);
-      suppressNextBackground();
       if (canOpen) {
         await Linking.openURL(url);
       } else {
@@ -141,7 +138,7 @@ export default function SheltersScreen() {
           <View style={styles.phoneRow}>
             <Text style={styles.phoneLabel}>Phone</Text>
             <TouchableOpacity
-              onPress={() => { suppressNextBackground(); Linking.openURL(`tel:${phone.replace(/\D/g, "")}`); }}
+              onPress={() => Linking.openURL(`tel:${phone.replace(/\D/g, "")}`)}
               accessibilityLabel={`Call ${phone}`}
               accessibilityRole="button"
             >
@@ -161,7 +158,7 @@ export default function SheltersScreen() {
               <Text style={styles.callNote}>{getCallForAddressNote(item)}</Text>
               {phone && (
                 <TouchableOpacity
-                  onPress={() => { suppressNextBackground(); Linking.openURL(`tel:${phone.replace(/\D/g, "")}`); }}
+                  onPress={() => Linking.openURL(`tel:${phone.replace(/\D/g, "")}`)
                   style={styles.callBtn}
                   accessibilityLabel={`Call ${phone}`}
                   accessibilityRole="button"
@@ -208,7 +205,7 @@ export default function SheltersScreen() {
             <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => quickExit(setPrivacyCover)}
+            onPress={() => quickExit()}
             accessibilityLabel="Quick Exit"
             accessibilityRole="button"
             style={styles.quickExit}
@@ -233,7 +230,6 @@ export default function SheltersScreen() {
         showsVerticalScrollIndicator={false}
       />
 
-      <PrivacyCover visible={privacyCover} />
     </SafeAreaView>
   );
 }

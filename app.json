@@ -11,7 +11,6 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.marbleceilings.bastet",
-      "deploymentTarget": "15.1",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "Bastet uses your location once to find the nearest domestic violence shelter. Your location is calculated on your device, never stored, and never shared."
