@@ -11,6 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { quickExit } from "@/src/utils/quickExit";
+import { PrivacyCover, usePrivacyCover } from "@/components/PrivacyCover";
 import { Colors, Spacing, Radius } from "@/constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Platform } from "react-native";
@@ -160,6 +161,7 @@ function ResourceRow({ item }: { item: ResourceItem }) {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function SupportScreen() {
+  const { privacyCover, setPrivacyCover } = usePrivacyCover();
   const [hotlinesExpanded, setHotlinesExpanded] = useState(true);
   const router = useRouter();
 
@@ -171,7 +173,7 @@ export default function SupportScreen() {
         <View style={styles.header}>
           <Text style={styles.appName}>Bastet</Text>
           <TouchableOpacity
-            onPress={() => quickExit()}
+            onPress={() => quickExit(setPrivacyCover)}
             accessibilityLabel="Quick Exit"
             accessibilityRole="button"
             style={styles.quickExit}
@@ -242,7 +244,7 @@ export default function SupportScreen() {
         </TouchableOpacity>
 
       </ScrollView>
-
+      <PrivacyCover visible={privacyCover} />
     </SafeAreaView>
   );
 }

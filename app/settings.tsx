@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Colors, Spacing, Radius, Typography } from '@/constants/theme';
 import { quickExit } from '@/src/utils/quickExit';
+import { PrivacyCover, usePrivacyCover } from '@/components/PrivacyCover';
 import { useOnboarding } from '@/src/utils/useOnboarding';
 
 const C = Colors.light;
@@ -72,6 +73,7 @@ function SectionHeader({ title }: { title: string }) {
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { privacyCover, setPrivacyCover } = usePrivacyCover();
   const { reset } = useOnboarding();
 
   const handleReplayOnboarding = async () => {
@@ -98,7 +100,7 @@ export default function SettingsScreen() {
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => quickExit()}
+          onPress={() => quickExit(setPrivacyCover)}
           style={styles.quickExit}
           accessibilityLabel="Quick Exit"
           accessibilityRole="button"
@@ -150,7 +152,7 @@ export default function SettingsScreen() {
         </Text>
 
       </ScrollView>
-
+      <PrivacyCover visible={privacyCover} />
     </SafeAreaView>
   );
 }
