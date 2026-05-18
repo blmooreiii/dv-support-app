@@ -14,7 +14,8 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "Bastet uses your location once to find the nearest domestic violence shelter. Your location is calculated on your device, never stored, and never shared."
-      }
+      },
+      "buildNumber": "3"
     },
     "android": {
       "adaptiveIcon": {
