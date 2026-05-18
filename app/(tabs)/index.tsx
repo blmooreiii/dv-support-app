@@ -182,6 +182,10 @@ function ShelterCard({ shelter, onDirections, onOtherShelters, onReset }: {
         </TouchableOpacity>
       </View>
 
+      <View style={styles.tipBanner}>
+        <Text style={styles.tipText}>💡 Always call first — bed availability changes constantly</Text>
+      </View>
+
       <TouchableOpacity onPress={onReset} accessibilityRole="button" accessibilityLabel="Start over" style={styles.resetRow}>
         <Text style={styles.resetText}>Start Over</Text>
       </TouchableOpacity>
@@ -487,6 +491,8 @@ const styles = StyleSheet.create({
   btnPrimaryText: { fontFamily: "DMSans_600SemiBold", fontSize: 14, color: "#fff" },
   btnSecondary: { flex: 1, paddingVertical: 13, borderRadius: Radius.sm, backgroundColor: C.stone, alignItems: "center" },
   btnSecondaryText: { fontFamily: "DMSans_500Medium", fontSize: 14, color: C.textSecondary },
+  tipBanner: { marginHorizontal: Spacing.lg, marginBottom: Spacing.sm, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md, backgroundColor: C.primaryLight, borderRadius: Radius.md },
+  tipText: { fontFamily: "DMSans_600SemiBold", fontSize: 13, color: C.primary, textAlign: "center" },
   resetRow: { alignItems: "flex-end", paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md },
   resetText: { fontFamily: "DMSans_500Medium", fontSize: 12, color: C.textMuted },
   divider: { flexDirection: "row", alignItems: "center", gap: Spacing.md, marginHorizontal: Spacing.xxl, marginVertical: Spacing.xl },

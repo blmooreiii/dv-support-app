@@ -474,7 +474,7 @@ function MessageBubble({ message, onQuestionTap, onCategoryTap, onLinkTap, onBro
 
           <View style={styles.shelterFooter}>
             <Text style={styles.shelterFooterText}>
-              💡 Call ahead to confirm availability
+              💡 Always call first — bed availability changes constantly
             </Text>
           </View>
         </View>
@@ -916,9 +916,9 @@ const styles = StyleSheet.create({
     borderTopColor: C.cardBorder,
   },
   shelterFooterText: {
-    fontFamily: Typography.bodySm,
-    fontSize: 11,
-    color: C.textMuted,
+    fontFamily: Typography.sansSemi,
+    fontSize: 13,
+    color: C.textPrimary,
     textAlign: "center",
   },
 });

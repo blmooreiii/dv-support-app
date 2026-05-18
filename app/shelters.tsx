@@ -221,6 +221,11 @@ export default function SheltersScreen() {
         </View>
       </View>
 
+      {/* ── Availability tip ── */}
+      <View style={styles.tipBanner}>
+        <Text style={styles.tipText}>💡 Always call first — bed availability changes constantly</Text>
+      </View>
+
       {/* ── Scrollable shelter list ── */}
       <FlatList
         data={list}
@@ -235,6 +240,8 @@ export default function SheltersScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.background },
+  tipBanner: { marginHorizontal: Spacing.xxl, marginBottom: Spacing.md, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md, backgroundColor: C.primaryLight, borderRadius: Radius.md },
+  tipText: { fontFamily: "DMSans_600SemiBold", fontSize: 13, color: C.primary, textAlign: "center" },
 
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: Spacing.xxl, paddingTop: Platform.OS === 'android' ? Spacing.xxl : Spacing.lg, paddingBottom: Spacing.md },
   backBtn: { paddingVertical: 6, minHeight: 44, justifyContent: 'center' },
